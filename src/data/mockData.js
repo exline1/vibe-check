@@ -201,6 +201,7 @@ export function analyzeVibe(inputText, lang = 'RU') {
     detectedTerms: detectedTerms.length > 0 ? detectedTerms : [
       { term: text.substring(0, 15), nuance: "Oddiy gap" }
     ],
-    rawInput: text
+    rawInput: text,
+    detectedTone: 'calm'
   };
 }

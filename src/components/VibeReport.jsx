@@ -4,6 +4,14 @@ import { Sparkles, Copy, Check, Share2, CornerDownRight, MessageSquare, Flame, A
 import confetti from 'canvas-confetti';
 import { TRANSLATIONS } from '../data/translations';
 
+/** Maps detectedTone → subtle visual accent token */
+const TONE_STYLES = {
+  calm:      { border: 'border-zinc-700/60',    badge: 'text-zinc-300',    glow: 'bg-zinc-400/[0.03]'  },
+  cocky:     { border: 'border-amber-600/40',   badge: 'text-amber-300',   glow: 'bg-amber-400/[0.04]' },
+  vulnerable:{ border: 'border-blue-600/40',    badge: 'text-blue-300',    glow: 'bg-blue-400/[0.04]'  },
+  toxic:     { border: 'border-red-700/40',      badge: 'text-red-300',     glow: 'bg-red-500/[0.04]'   },
+};
+
 export default function VibeReport({ report, onReset, onCopySuccess, lang }) {
   const [copiedReport, setCopiedReport] = useState(false);
   const [copiedReply, setCopiedReply] = useState(false);
@@ -11,6 +19,8 @@ export default function VibeReport({ report, onReset, onCopySuccess, lang }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
 
   if (!report) return null;
+
+  const toneStyle = TONE_STYLES[report.detectedTone] || TONE_STYLES.calm;
 
   const handleCopyReport = () => {
     const reportText = `ОТЧЕТ ВАЙБ ЧЕКА / VIBE CHECK REPORT
@@ -95,15 +105,15 @@ export default function VibeReport({ report, onReset, onCopySuccess, lang }) {
       {/* 1. THE VERDICT CARD */}
       <motion.div
         variants={itemVariants}
-        className="relative rounded-[32px] bg-[#0A0A0A] border border-[#1F1F1F] p-6 md:p-8 overflow-hidden shadow-2xl stealth-glow"
+        className={`relative rounded-[32px] bg-[#0A0A0A] border ${toneStyle.border} p-6 md:p-8 overflow-hidden shadow-2xl stealth-glow`}
       >
         {/* Subtle radial glow background behind card */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/[0.02] rounded-full blur-3xl pointer-events-none" />
+        <div className={`absolute top-0 right-0 w-64 h-64 ${toneStyle.glow} rounded-full blur-3xl pointer-events-none`} />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl">{report.badgeEmoji}</span>
-            <span className="text-xs font-mono tracking-widest uppercase text-zinc-400 px-3 py-1 rounded-full bg-[#111111] border border-[#262626]">
+            <span className={`text-xs font-mono tracking-widest uppercase ${toneStyle.badge} px-3 py-1 rounded-full bg-[#111111] border border-[#262626]`}>
               {report.badgeLabel}
             </span>
           </div>
