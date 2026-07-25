@@ -97,7 +97,7 @@ export default function App() {
     setReport(null);
 
     try {
-      // Async AI Call (Groq Llama-3 API / Heuristic Fallback)
+      // Async AI Call (Perplexity AI API / Heuristic Fallback)
       const result = await analyzeVibeAI(inputText, lang);
       const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const historyItem = { ...result, timestamp };
