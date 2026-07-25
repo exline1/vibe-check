@@ -1,27 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Header from './components/Header';
-import PresetPills from './components/PresetPills';
-import AnalyzerEngine from './components/AnalyzerEngine';
-import VibeReport from './components/VibeReport';
+import ChatInput from './components/ChatInput';
+import ChatMessages from './components/ChatMessages';
 import HistoryModal from './components/HistoryModal';
 import Toast from './components/Toast';
-import { analyzeVibeAI } from './services/aiService';
+import { analyzeVibeAI, getApiKey } from './services/aiService';
 import { TRANSLATIONS } from './data/translations';
+
+const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 
 export default function App() {
   const [lang, setLang] = useState('RU');
-  const [text, setText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [report, setReport] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(generateId());
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  const reportRef = useRef(null);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
+  const hasApiKey = !!getApiKey();
 
   // Load history & language preference from LocalStorage
   useEffect(() => {
@@ -29,15 +30,16 @@ export default function App() {
       const savedLang = localStorage.getItem('vibe_check_lang');
       if (savedLang) setLang(savedLang);
 
-      const saved = localStorage.getItem('vibe_check_history');
-      if (saved) setHistory(JSON.parse(saved));
+      const saved = localStorage.getItem('vibe_check_conversations');
+      if (saved) {
+        setConversations(JSON.parse(saved));
+      }
     } catch (e) {
       console.error('Failed to load history/lang', e);
     }
   }, []);
 
   const handleToggleLang = () => {
-    // Cycle: RU -> UZ -> EN -> RU
     let nextLang = 'RU';
     if (lang === 'RU') nextLang = 'UZ';
     else if (lang === 'UZ') nextLang = 'EN';
@@ -50,7 +52,6 @@ export default function App() {
     playSound('click');
   };
 
-  // Web Audio API Sound Synthesizer
   const playSound = (type) => {
     if (!soundEnabled) return;
     try {
@@ -85,77 +86,101 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const handleSelectPreset = (preset) => {
-    playSound('click');
-    setText(preset.text);
-    handleAnalyze(preset.text);
+  const saveConversation = (updatedMessages, currentId) => {
+    setConversations(prev => {
+      const existing = prev.find(c => c.id === currentId);
+      let updated;
+      
+      if (existing) {
+        updated = prev.map(c => c.id === currentId ? { ...c, messages: updatedMessages, timestamp: new Date().toLocaleString() } : c);
+      } else {
+        const newConv = {
+          id: currentId,
+          timestamp: new Date().toLocaleString(),
+          messages: updatedMessages
+        };
+        updated = [newConv, ...prev].slice(0, 50); // Keep last 50
+      }
+      
+      try {
+        localStorage.setItem('vibe_check_conversations', JSON.stringify(updated));
+      } catch (e) {}
+      
+      return updated;
+    });
   };
 
-  const handleAnalyze = async (inputText) => {
+  const handleSend = async (inputText) => {
     playSound('click');
-    setIsLoading(true);
-    setReport(null);
+    
+    const userMsg = {
+      id: generateId(),
+      role: 'user',
+      text: inputText,
+      timestamp: Date.now()
+    };
+    
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setIsTyping(true);
 
     try {
-      // Async AI Call (Groq AI API / Heuristic Fallback)
-      const result = await analyzeVibeAI(inputText, lang);
-      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const historyItem = { ...result, timestamp };
+      // Get last 8 messages for context
+      const conversationHistory = newMessages.slice(-8);
+      
+      const result = await analyzeVibeAI(inputText, lang, conversationHistory);
+      
+      const botMsg = {
+        id: generateId(),
+        role: 'assistant',
+        timestamp: Date.now(),
+        text: result.translation || result.humanTranslation || result.verdict, // fallback
+        ...result // Spread all other analytics
+      };
 
-      setReport(result);
-      setIsLoading(false);
+      const finalMessages = [...newMessages, botMsg];
+      setMessages(finalMessages);
+      setIsTyping(false);
       playSound('success');
 
-      // Update LocalStorage History
-      setHistory(prev => {
-        const filtered = prev.filter(item => item.rawInput !== result.rawInput);
-        const updated = [historyItem, ...filtered].slice(0, 20);
-        try {
-          localStorage.setItem('vibe_check_history', JSON.stringify(updated));
-        } catch (e) {}
-        return updated;
-      });
+      saveConversation(finalMessages, activeConversationId);
 
-      // Scroll smoothly to report
-      setTimeout(() => {
-        if (reportRef.current) {
-          reportRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
     } catch (err) {
       console.error("Vibe analysis error:", err);
-      setIsLoading(false);
+      setIsTyping(false);
       showToast(lang === 'RU' ? 'Ошибка анализа' : lang === 'UZ' ? 'Tahlil xatosi' : 'Analysis error');
     }
   };
 
-  const handleReset = () => {
+  const handleNewChat = () => {
     playSound('click');
-    setReport(null);
-    setText('');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setMessages([]);
+    setActiveConversationId(generateId());
   };
 
   const handleClearHistory = () => {
-    setHistory([]);
+    setConversations([]);
     try {
-      localStorage.removeItem('vibe_check_history');
+      localStorage.removeItem('vibe_check_conversations');
     } catch (e) {}
-    showToast(lang === 'RU' ? 'История очищена.' : lang === 'UZ' ? 'Tarix tozalandi.' : 'History cleared.');
+    showToast(lang === 'RU' ? 'История диалогов очищена.' : lang === 'UZ' ? 'Suhbatlar tarixi tozalandi.' : 'Chat history cleared.');
+    if (messages.length > 0) {
+      handleNewChat();
+    }
+  };
+
+  const handleSelectHistoryItem = (chat) => {
+    setMessages(chat.messages || []);
+    setActiveConversationId(chat.id);
   };
 
   return (
-    <div className="bg-black text-white min-h-screen bg-radial-gradient relative overflow-x-hidden">
-      {/* Centered max-width wrapper (~800px) */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-[800px] mx-auto px-4 sm:px-6 py-4 pb-24 flex flex-col min-h-screen"
-      >
+    <div className="bg-black text-white h-screen flex flex-col bg-radial-gradient relative overflow-hidden">
+      <div className="max-w-[1000px] w-full mx-auto px-2 sm:px-6 flex flex-col h-full relative z-10">
+        
         {/* Navigation Bar */}
         <Navbar
-          historyCount={history.length}
+          historyCount={conversations.length}
           onOpenHistory={() => {
             playSound('click');
             setIsHistoryOpen(true);
@@ -164,65 +189,41 @@ export default function App() {
           onToggleSound={() => setSoundEnabled(!soundEnabled)}
           lang={lang}
           onToggleLang={handleToggleLang}
+          onNewChat={handleNewChat}
         />
 
-        {/* Header Section */}
-        <Header lang={lang} />
-
-        {/* Main Content Area */}
-        <main className="flex-1 w-full">
-          {/* Test Presets Toolbar */}
-          <PresetPills
-            onSelectPreset={handleSelectPreset}
-            disabled={isLoading}
-            lang={lang}
-          />
-
-          {/* Analyzer Engine Textarea & Button */}
-          <AnalyzerEngine
-            text={text}
-            setText={setText}
-            onAnalyze={handleAnalyze}
-            isLoading={isLoading}
-            lang={lang}
-          />
-
-          {/* Results Section (Vibe Report) */}
-          <div ref={reportRef}>
-            <AnimatePresence mode="wait">
-              {report && (
-                <VibeReport
-                  key={report.rawInput}
-                  report={report}
-                  onReset={handleReset}
-                  onCopySuccess={showToast}
-                  lang={lang}
-                />
-              )}
-            </AnimatePresence>
+        {/* Show Header only if chat is empty */}
+        {messages.length === 0 && (
+          <div className="mt-8 flex flex-col items-center px-2">
+            <Header lang={lang} />
           </div>
-        </main>
+        )}
 
-        {/* Footer */}
-        <footer className="mt-20 pt-8 border-t border-[#1F1F1F]/60 text-center space-y-2">
-          <p className="text-xs text-zinc-500 font-mono">
-            {t.footerText}
-          </p>
-          <p className="text-[11px] text-zinc-600">
-            {t.footerSubtext}
-          </p>
-        </footer>
-      </motion.div>
+        {/* Chat Messages */}
+        <ChatMessages 
+          messages={messages} 
+          isTyping={isTyping} 
+          lang={lang} 
+        />
+
+        {/* Chat Input */}
+        <div className="pb-4 w-full px-2 md:px-12 max-w-4xl mx-auto">
+          <ChatInput 
+            lang={lang}
+            onSend={handleSend}
+            disabled={isTyping}
+            hasApiKey={hasApiKey}
+          />
+        </div>
+
+      </div>
 
       {/* History Drawer Modal */}
       <HistoryModal
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
-        history={history}
-        onSelectHistoryItem={(item) => {
-          setReport(item);
-          setText(item.rawInput);
-        }}
+        history={conversations}
+        onSelectHistoryItem={handleSelectHistoryItem}
         onClearHistory={handleClearHistory}
         lang={lang}
       />

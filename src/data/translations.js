@@ -46,7 +46,15 @@ export const TRANSLATIONS = {
     footerText: "Вайб Чек © 2026 • Построено на архитектуре Темного Минимализма",
     footerSubtext: "Powered by Multi-Dimensional Subtext Heuristics & Spring Motion Physics",
     toastCopiedReport: "Полный отчет Вайб Чека скопирован в буфер обмена!",
-    toastCopiedReply: "Рекомендуемый ответ скопирован в буфер обмена!"
+    toastCopiedReply: "Рекомендуемый ответ скопирован в буфер обмена!",
+    newChat: "Новый чат",
+    vibeJudgeTyping: "Vibe Judge печатает...",
+    showDetails: "Показать аналитику",
+    hideDetails: "Скрыть аналитику",
+    chatHistory: "История диалогов",
+    messagesCount: "сообщений",
+    welcomeMessage: "Я Vibe Judge. Отправь мне переписку, и я разнесу её по фактам.",
+    sendMessage: "Отправить сообщение..."
   },
   UZ: {
     appTitle: "Vibe Check",
@@ -94,7 +102,15 @@ export const TRANSLATIONS = {
     footerText: "Vibe Check © 2026 • To'q Minimalizm Arxitekturasi",
     footerSubtext: "Powered by Multi-Dimensional Subtext Heuristics & Spring Motion Physics",
     toastCopiedReport: "To'liq Vayb hisoboti buferga nusxalandi!",
-    toastCopiedReply: "Tavsiya etilgan javob buferga nusxalandi!"
+    toastCopiedReply: "Tavsiya etilgan javob buferga nusxalandi!",
+    newChat: "Yangi chat",
+    vibeJudgeTyping: "Vibe Judge yozmoqda...",
+    showDetails: "Tahlilni ko'rsatish",
+    hideDetails: "Tahlilni yashirish",
+    chatHistory: "Suhbatlar tarixi",
+    messagesCount: "xabar",
+    welcomeMessage: "Men Vibe Judge. Menga yozishmalarni yubor, men haqiqatni aytaman.",
+    sendMessage: "Xabar yuborish..."
   },
   EN: {
     appTitle: "Vibe Check",
@@ -142,6 +158,14 @@ export const TRANSLATIONS = {
     footerText: "Vibe Check © 2026 • Built with Dark Minimalism Architecture",
     footerSubtext: "Powered by Multi-Dimensional Subtext Heuristics & Spring Motion Physics",
     toastCopiedReport: "Full Vibe Report copied to clipboard!",
-    toastCopiedReply: "Recommended reply copied to clipboard!"
+    toastCopiedReply: "Recommended reply copied to clipboard!",
+    newChat: "New Chat",
+    vibeJudgeTyping: "Vibe Judge is typing...",
+    showDetails: "Show Analytics",
+    hideDetails: "Hide Analytics",
+    chatHistory: "Chat History",
+    messagesCount: "messages",
+    welcomeMessage: "I'm Vibe Judge. Send me a message, and I'll break down the real subtext.",
+    sendMessage: "Send a message..."
   }
 };
