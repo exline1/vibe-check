@@ -122,7 +122,7 @@ export default function VibeReport({ report, onReset, onCopySuccess, lang }) {
             {/* AI Model Indicator Badge */}
             <span className="text-[11px] font-mono tracking-wider px-2.5 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center gap-1.5">
               <Cpu className="w-3 h-3 text-emerald-400" />
-              <span>{report.modelUsed || 'Perplexity AI'}</span>
+              <span>{report.modelUsed || 'Groq AI'}</span>
             </span>
 
             <div className="flex items-center gap-1.5 text-xs text-zinc-500 font-mono">
@@ -156,8 +156,8 @@ export default function VibeReport({ report, onReset, onCopySuccess, lang }) {
             <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
             <span>
               {lang === 'RU'
-                ? 'Режим эвристического аналайзера. Для активации Perplexity AI добавьте VITE_PERPLEXITY_API_KEY в файл .env'
-                : 'Local Heuristic Mode. Add VITE_PERPLEXITY_API_KEY to your .env file to enable live Perplexity AI.'}
+                ? 'Режим эвристического аналайзера. Для активации Groq AI добавьте VITE_GROQ_API_KEY в файл .env'
+                : 'Local Heuristic Mode. Add VITE_GROQ_API_KEY to your .env file to enable live Groq AI.'}
             </span>
           </div>
         )}
@@ -167,8 +167,8 @@ export default function VibeReport({ report, onReset, onCopySuccess, lang }) {
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
             <span>
               {lang === 'RU'
-                ? `Ошибка Perplexity API: ${report.apiError}. Использован локальный фолбэк.`
-                : `Perplexity API Error: ${report.apiError}. Used local fallback.`}
+                ? `Ошибка Groq API: ${report.apiError}. Использован локальный фолбэк.`
+                : `Groq API Error: ${report.apiError}. Used local fallback.`}
             </span>
           </div>
         )}

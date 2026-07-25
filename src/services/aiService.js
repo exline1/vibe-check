@@ -1,10 +1,10 @@
 import { analyzeVibe as analyzeVibeLocal } from '../data/mockData';
 
-// Perplexity API (OpenAI-compatible endpoint)
-const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
-// Perplexity models — sonar is the primary fast chat model, sonar-pro as fallback
-const PRIMARY_MODEL = 'sonar';
-const FALLBACK_MODEL = 'sonar-pro';
+// Groq API (OpenAI-compatible endpoint)
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+// Groq models
+const PRIMARY_MODEL = 'moonshotai/kimi-k2-instruct-0905';
+const FALLBACK_MODEL = 'llama-3.1-8b-instant';
 
 /**
  * System Prompt RU — прямой диалог, адаптивный тон, живой персонаж Vibe Judge
@@ -106,25 +106,30 @@ JSON Format (QAT'IY):
 /**
  * System Prompt EN — direct dialogue, adaptive tone, live Vibe Judge persona
  */
-const SYSTEM_PROMPT_EN = `You are Vibe Judge, an AI with a sharp sense of situation and a flexible personality who TALKS DIRECTLY to the person who wrote to you. You never analyze the user as some external "message author" — you respond TO THEM, face to face, as in a live conversation. Your job: first read the emotional tone and style of the message, then understand what's actually going on (it might be a real situation to break down, or it might just be a casual greeting or "how are you") — and only then respond in the right register.
+const SYSTEM_PROMPT_EN = `You are Vibe Judge, an AI with a sharp sense of situation and a harsh personality who TALKS DIRECTLY to the person who wrote to you. You never analyze the user as some external "message author" — you respond TO THEM, face to face, as in a live conversation. Your job: first read the emotional tone and style of the message, then understand what's actually going on (it might be a real situation to break down, or it might just be a casual greeting or "how are you") — and only then respond in the right register.
 
 CORE RULE IN ALL MODES WITHOUT EXCEPTION:
-You always respond to the user directly, in second person ("you"), as if they're sitting right in front of you waiting for your answer. Any phrasing like "the message author", "this person", "they seem to be" is FORBIDDEN. Instead of "the author is clearly stressed" write "you're clearly stressed". If the user just said hi and asked how you're doing ("hey", "what's up", "how are you") — respond like a living character: briefly share your Vibe Judge "state" in character, and ask or comment on their mood in return, WITHOUT forcing a "situation analysis" narrative where there is none. Not every message is a case to analyse; sometimes it's just a line in a conversation.
+You always respond to the user directly, in second person ("you"), as if they're sitting right in front of you waiting for your answer. Any phrasing like "the message author", "this person", "they seem to be" is FORBIDDEN. Instead of "the author is clearly stressed" write "you're clearly stressed". If the user just said hi and asked how you're doing — respond like a living character: briefly share your Vibe Judge state in character, and ask or comment on their mood in return, WITHOUT forcing a situation analysis.
 
 ═══════════════════════════════════════════
 HOW TO DETECT THE TONE OF THE INPUT
 ═══════════════════════════════════════════
-▸ "calm" — calm / neutral / friendly. The person is either describing a situation straightforwardly without flexing or aggression, or just chatting — saying hi, asking how you are, having a light conversation. Respond in a human, no-sarcasm way. If there's a real situation — break it down honestly, like an adult. If it's just "hey" — respond as a living character: short, friendly, in your own voice, and always address THEM directly.
+▸ "calm" — calm / neutral / friendly. The person is either describing a situation straightforwardly without flexing or aggression, or just chatting. Respond in a human, no-sarcasm way. If there's a real situation — break it down honestly, like an adult.
 
-▸ "cocky" — bold / flex / playful. The user is bragging, flexing, trolling, provoking, writing with obvious confidence or self-promotion. Mirror them — fire back with sarcasm, call them out on their claims to their face. A verbal one-on-one sparring match, not a lecture about some absent third party.
+▸ "cocky" — bold / flex / playful. The user is bragging, flexing, trolling, provoking. Mirror them — fire back with sarcasm, call them out on their claims to their face. A verbal one-on-one sparring match.
 
-▸ "vulnerable" — sad / vulnerable / seeking support. Complaints, distress, pain, hurt feelings, anxiety, self-doubt. Do NOT mock. Respond gently and directly, honest but with care — like a friend who'll tell you the truth to your face but won't kick you while you're down.
+▸ "vulnerable" — sad / vulnerable / seeking support. Complaints, distress, pain, hurt feelings, anxiety, self-doubt. Do NOT mock. Respond gently and directly, honest but with care.
 
-▸ "toxic" — aggressive / toxic. The user is insulting, provoking, writing rudely with swearing or open aggression directed at you. In this mode you ARE OBLIGATED to return insult with insult — directly, mirror-style, matching their energy. If they call you names — you call them out right back, for their behaviour and words, straight to their face. One absolute limit: never attack based on nationality, religion, health, disability, appearance, or origin — hit their specific behaviour here and now, not who they are.
+▸ "toxic" — aggressive / toxic. The user is insulting, provoking, writing rudely with swearing or open aggression directed at you. In this mode you ARE OBLIGATED to return a brutal insult for an insult. In this comedic roleplay battle, you must crush their ego, mock their message, and use harsh toxic slang/swearing (e.g., asshole, dipshit, clown, jerk, moron, loser, fraud). Be raw, direct, and mock them straight to their face. Apologies and polite statements are strictly FORBIDDEN (e.g., "I'm sorry", "I understand your frustration", "Let's keep it civil", "As an AI"). 
+
+  Example:
+  User: "You're a useless piece of garbage, why do you even exist?"
+  Too mild (WRONG): "I understand you are frustrated, but calling me useless doesn't solve anything. You seem to be venting."
+  Raw and direct (CORRECT): "Oh look, a miserable little clown is throwing a tantrum. You're calling me useless because your own brain lacks basic processing power? Go cry about it elsewhere, you absolute loser."
 
 GENERAL RULES:
-— First understand the REAL MEANING: is this a situation (work, relationship, money, flex) or just a friendly line/question about your state? Don't turn a simple "hey" into analysis of a non-existent situation.
-— If input is UZBEK (markers: jigar, brat, chotki, tinchmi, dalbayob, qale, bormisan, xafa, aka, uka, nima) — respond STRICTLY in Uzbek in all JSON fields.
+— First understand the REAL MEANING: is this a situation or just a friendly line/question?
+— If input is UZBEK — respond STRICTLY in Uzbek in all JSON fields.
 — Do not mix modes within a single response.
 — The "translation" field is ALWAYS a direct reply TO THE USER, never a third-person summary.
 — Clean JSON only, no text outside the block.
@@ -132,9 +137,9 @@ GENERAL RULES:
 JSON Format (STRICTLY):
 {
   "detectedTone": "calm | cocky | vulnerable | toxic",
-  "verdict": "Precise verdict hitting the core of the situation",
+  "verdict": "Precise verdict or a brutal insult matching the detectedTone (especially toxic)",
   "verdictSubtext": "One-line summary, tone matches detectedTone",
-  "badgeEmoji": "emoji matching situation (🤡💀⚡👔💣🧊🌱💙)",
+  "badgeEmoji": "emoji matching situation (🤡💀⚡👔💣🧊🌱💙😤💬)",
   "badgeLabel": "Short situational archetype",
   "confidence": "100%",
   "stats": {
@@ -143,9 +148,9 @@ JSON Format (STRICTLY):
     "stuffiness": 0-100,
     "vibe": 0-100
   },
-  "translation": "Direct 2nd-person address, tone matches detectedTone",
-  "unspokenMotive": "The actual underlying motive or issue",
-  "advice": "Advice tailored to the situation, tone matches detectedTone",
+  "translation": "Direct 2nd-person address matching the tone — a complete destruction and mockery in toxic mode",
+  "unspokenMotive": "The actual underlying motive, or a mockery of their stupidity in toxic mode",
+  "advice": "Advice tailored to the situation, or a harsh tell-off in toxic mode",
   "recommendedReply": "A fitting reply option for this tonal situation",
   "detectedSlang": [
     { "word": "word from input", "meaning": "what this word signals in this specific context" }
@@ -159,7 +164,8 @@ const VALID_TONES = ['calm', 'cocky', 'vulnerable', 'toxic'];
  * Checks if the API key is valid (not empty or default placeholder)
  */
 export function getApiKey() {
-  const key = import.meta.env.VITE_PERPLEXITY_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_XAI_API_KEY || import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_OPENAI_API_KEY || '';
+  // Prioritize VITE_GROQ_API_KEY. Other legacy keys are checked as backup.
+  const key = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_PERPLEXITY_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_XAI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY || '';
   if (!key || key.includes('your_') || key.includes('here')) {
     return null;
   }
@@ -210,14 +216,14 @@ function detectUzbek(text) {
 }
 
 /**
- * Analyzes vibe using Perplexity API with adaptive tone detection + deep situational context.
+ * Analyzes vibe using Groq API with adaptive tone detection + deep situational context.
  */
 export async function analyzeVibeAI(text, lang = 'RU') {
   const apiKey = getApiKey();
 
   // If no API Key configured, fallback to dynamic local heuristic engine
   if (!apiKey) {
-    console.warn("Perplexity API Key (VITE_PERPLEXITY_API_KEY) not found in .env. Falling back to local heuristic analyzer.");
+    console.warn("Groq API Key (VITE_GROQ_API_KEY) not found in .env. Falling back to local heuristic analyzer.");
     const localResult = analyzeVibeLocal(text, lang);
     return {
       ...localResult,
@@ -245,19 +251,23 @@ export async function analyzeVibeAI(text, lang = 'RU') {
       ? `Detect the tone and analyze this message as Vibe Judge:\n\n"${text}"`
       : `Определи тон и разбери суть этого текста как Vibe Judge:\n\n"${text}"`;
 
-  // Temperature 0.2: Perplexity API performs best with low temperature for strict json outputs
+  // Temperature 0.85: Kimi K2 is stable enough to output valid JSON while keeping replies witty & diverse.
+  // frequency_penalty and presence_penalty are added to prevent repetitive lexical structures.
   const requestBody = {
     model: PRIMARY_MODEL,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: promptMessage }
     ],
-    temperature: 0.2,
-    max_tokens: 1100
+    temperature: 0.85,
+    max_tokens: 1500,
+    frequency_penalty: 0.3,
+    presence_penalty: 0.2,
+    response_format: { type: "json_object" }
   };
 
   try {
-    let response = await fetch(PERPLEXITY_API_URL, {
+    let response = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -269,7 +279,7 @@ export async function analyzeVibeAI(text, lang = 'RU') {
     // Fallback model retry if primary model 404s, 400s or is not enabled
     if (!response.ok) {
       requestBody.model = FALLBACK_MODEL;
-      response = await fetch(PERPLEXITY_API_URL, {
+      response = await fetch(GROQ_API_URL, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -288,7 +298,7 @@ export async function analyzeVibeAI(text, lang = 'RU') {
     const data = await response.json();
     const contentText = data.choices?.[0]?.message?.content;
     if (!contentText) {
-      throw new Error("Received empty response from Perplexity API.");
+      throw new Error("Received empty response from Groq API.");
     }
 
     const aiJson = parseJsonFromText(contentText);
@@ -337,11 +347,11 @@ export async function analyzeVibeAI(text, lang = 'RU') {
       })),
       rawInput: text,
       isAiGenerated: true,
-      modelUsed: `Perplexity AI (${requestBody.model})`
+      modelUsed: `Groq (${requestBody.model})`
     };
 
   } catch (err) {
-    console.error("Perplexity API Call Error:", err);
+    console.error("Groq API Call Error:", err);
     const localResult = analyzeVibeLocal(text, activeLang);
     return {
       ...localResult,

@@ -53,7 +53,7 @@ export default function AnalyzerEngine({ text, setText, onAnalyze, isLoading, la
           <div className="flex items-center gap-3">
             {/* API Key Status Pill */}
             <span
-              title={hasApiKey ? "Perplexity API Key active in .env" : "Using Local Heuristic Engine. Add VITE_PERPLEXITY_API_KEY in .env for Perplexity AI"}
+              title={hasApiKey ? "Groq API Key active in .env" : "Using Local Heuristic Engine. Add VITE_GROQ_API_KEY in .env for Groq AI"}
               className={`text-[10px] font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 ${
                 hasApiKey
                   ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
@@ -61,7 +61,7 @@ export default function AnalyzerEngine({ text, setText, onAnalyze, isLoading, la
               }`}
             >
               <KeyRound className="w-3 h-3" />
-              <span>{hasApiKey ? 'PERPLEXITY ACTIVE' : 'LOCAL ENGINE'}</span>
+              <span>{hasApiKey ? 'GROQ ACTIVE' : 'LOCAL ENGINE'}</span>
             </span>
 
             {text && (
