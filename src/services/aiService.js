@@ -227,16 +227,13 @@ export const getApiKey = () => {
  */
 function parseJsonFromText(rawText) {
   let cleaned = rawText.trim();
-  // Remove markdown code fence if present
   if (cleaned.startsWith('```json')) {
     cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
   } else if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
   }
-  // Remove possible reasoning blocks <think>...</think> from models like R1 / Sonar Reasoning
   cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
   
-  // Try to locate JSON bounds if extra text was included
   const firstBrace = cleaned.indexOf('{');
   const lastBrace = cleaned.lastIndexOf('}');
   if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
@@ -321,14 +318,40 @@ const RESPONSE_JSON_SCHEMA = {
 };
 
 /**
- * Analyzes vibe using Perplexity API with adaptive tone detection + chat history
+ * Analyzes vibe using Perplexity API with adaptive tone detection + chat history + attachments (images, files, video)
  */
-export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = []) {
+export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [], attachments = null) {
   const apiKey = getApiKey();
 
+  // Normalize attachments into an array
+  const attachmentList = Array.isArray(attachments) 
+    ? attachments 
+    : (attachments ? [attachments] : []);
+
+  let fullPromptText = text || '';
+
+  // Extract text content from text files or PDFs in attachmentList
+  attachmentList.forEach((att) => {
+    if (att && att.extractedText) {
+      const fileLabel = att.type === 'pdf' ? 'PDF документ' : 'Текстовый файл';
+      const textSnippet = `\n\n[Прикрепленный ${fileLabel} "${att.fileName}":]\n${att.extractedText}`;
+      fullPromptText = fullPromptText ? `${fullPromptText}${textSnippet}` : textSnippet;
+    }
+  });
+
+  // Collect all base64 images from image attachments or video frame attachments
+  const allImages = [];
+  attachmentList.forEach((att) => {
+    if (att && att.images && Array.isArray(att.images)) {
+      allImages.push(...att.images);
+    } else if (att && att.thumbnail && att.thumbnail.startsWith('data:image')) {
+      allImages.push(att.thumbnail);
+    }
+  });
+
   if (!apiKey) {
-    console.warn("Perplexity API Key (VITE_PERPLEXITY_API_KEY) not found in .env. Falling back to local heuristic analyzer.");
-    const localResult = analyzeVibeLocal(text, lang);
+    console.warn("API Key not found in .env. Falling back to local heuristic analyzer.");
+    const localResult = analyzeVibeLocal(fullPromptText || 'вложение', lang);
     return {
       ...localResult,
       intent: localResult.intent || 'vibe_check',
@@ -339,7 +362,7 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
     };
   }
 
-  const isUzbekText = lang === 'UZ' || detectUzbek(text);
+  const isUzbekText = lang === 'UZ' || detectUzbek(fullPromptText);
   const activeLang = isUzbekText ? 'UZ' : lang;
 
   let systemPrompt = SYSTEM_PROMPT_RU;
@@ -349,23 +372,64 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
     systemPrompt = SYSTEM_PROMPT_EN;
   }
 
-  const promptMessage = isUzbekText
-    ? `Matnni Vibe Judge sifatida tahlil qil va javob ber:\n\n"${text}"`
-    : activeLang === 'EN'
-      ? `Analyze this message as Vibe Judge and respond:\n\n"${text}"`
-      : `Разбери это сообщение как Vibe Judge и ответь:\n\n"${text}"`;
+  // Vision instruction if images are attached
+  if (allImages.length > 0) {
+    const visionInstruction = activeLang === 'UZ'
+      ? `\n\n═══════════════════════════════════════════\nRASM/KADRLAR TAHLILI BO'YICHA KO'RSATMA:\nFoydalanuvchi rasm(lar) yoki video kadrlarini biriktirdi. Rasmda nima borligini (mashina, kiyim, yuz, skrinshot va h.k.) qisqacha tasvirlab ber va Vibe Judge fe'l-atvoringga mos ravishda munosabat bildir (masalan: maqtanish bo'lsa -> cocky, g'amgin bo'lsa -> vulnerable, agressiya bo'lsa -> toxic).`
+      : activeLang === 'EN'
+        ? `\n\n═══════════════════════════════════════════\nIMAGE/FRAMES ANALYSIS INSTRUCTION:\nThe user attached image(s) or video frames. Briefly describe what you see (car, outfit, screenshot, face, gesture, etc.), gauge the situational vibe (e.g. flex/showing off -> cocky, sadness -> vulnerable, aggressive -> toxic), and respond in your usual Vibe Judge personality.`
+        : `\n\n═══════════════════════════════════════════\nИНСТРУКЦИЯ ПО АНАЛИЗУ ИЗОБРАЖЕНИЯ/КАДРОВ:\nПользователь прикрепил изображение(я) или кадры видео. Опиши кратко то, что видишь на картинке (автомобиль, одежда, еда, скриншот, лицо, жест и т.д.), определи тон ситуативно (например, понт/хвастовство -> cocky, слёзы/грусть -> vulnerable, агрессия -> toxic) и отреагируй в своём обычном стиле Vibe Judge.`;
+    
+    systemPrompt += visionInstruction;
+  }
 
-  const formattedHistory = conversationHistory.map(msg => ({
-    role: msg.role === 'user' ? 'user' : 'assistant',
-    content: msg.role === 'user' ? (msg.text || msg.rawInput || '') : (msg.translation || msg.text || '')
-  }));
+  const defaultPromptMessage = isUzbekText
+    ? (fullPromptText ? `Matnni Vibe Judge sifatida tahlil qil va javob ber:\n\n"${fullPromptText}"` : `Biriktirilgan rasm/faylni Vibe Judge sifatida tahlil qil va javob ber.`)
+    : activeLang === 'EN'
+      ? (fullPromptText ? `Analyze this message as Vibe Judge and respond:\n\n"${fullPromptText}"` : `Analyze the attached image/file as Vibe Judge and respond.`)
+      : (fullPromptText ? `Разбери это сообщение как Vibe Judge и ответь:\n\n"${fullPromptText}"` : `Разбери прикрепленное изображение/файл как Vibe Judge и ответь.`);
+
+  // Safely format conversation history - NEVER allow empty string in content!
+  const formattedHistory = conversationHistory
+    .map(msg => {
+      let contentText = msg.role === 'user'
+        ? (msg.text || (msg.attachments?.length ? '[Пользователь прикрепил файл]' : '[Вложение]'))
+        : (msg.translation || msg.text || '[Ответ]');
+      
+      contentText = String(contentText).trim();
+      if (!contentText) {
+        contentText = msg.role === 'user' ? '[Пользователь отправил вложение]' : '[Vibe Judge вердикт]';
+      }
+
+      return {
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: contentText
+      };
+    });
+
+  // Construct user content payload (string vs multimodal array with image_url)
+  let userMessageContent;
+  if (allImages.length > 0) {
+    userMessageContent = [
+      { type: "text", text: defaultPromptMessage }
+    ];
+    // Limit to max 5 images total per request (Perplexity / Groq vision limit)
+    allImages.slice(0, 5).forEach(imgDataUrl => {
+      userMessageContent.push({
+        type: "image_url",
+        image_url: { url: imgDataUrl }
+      });
+    });
+  } else {
+    userMessageContent = defaultPromptMessage;
+  }
 
   const requestBody = {
     model: PRIMARY_MODEL,
     messages: [
       { role: 'system', content: systemPrompt },
       ...formattedHistory,
-      { role: 'user', content: promptMessage }
+      { role: 'user', content: userMessageContent }
     ],
     temperature: 0.85,
     max_tokens: 1500,
@@ -386,16 +450,14 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
       body: JSON.stringify(requestBody)
     });
 
-    // Fallback attempt with primary model without json_schema if json_schema fails
+    // Fallback attempt: if primary fails (or json_schema fails with image_url), try without json_schema or fallback model
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
       const errorMsg = errData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
-      console.warn(`Perplexity Primary Model (${PRIMARY_MODEL}) with json_schema failed (${errorMsg}). Trying fallback model (${FALLBACK_MODEL})...`);
+      console.warn(`Perplexity Primary Model (${PRIMARY_MODEL}) call failed (${errorMsg}). Retrying without json_schema / fallback model...`);
       
-      requestBody.model = FALLBACK_MODEL;
-      // Also try json_object type or prompt enforcement if json_schema unsupported
+      // Attempt 2: Same primary model without json_schema
       delete requestBody.response_format;
-      
       response = await fetch(PERPLEXITY_API_URL, {
         method: 'POST',
         headers: {
@@ -404,6 +466,19 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
         },
         body: JSON.stringify(requestBody)
       });
+
+      // Attempt 3: Fallback model without json_schema
+      if (!response.ok) {
+        requestBody.model = FALLBACK_MODEL;
+        response = await fetch(PERPLEXITY_API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+      }
     }
 
     if (!response.ok) {
@@ -455,7 +530,7 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
         stuffiness: getDescriptor(stuffiness, 'stuffiness', activeLang),
         overallVibe: getDescriptor(overallVibe, 'vibe', activeLang)
       },
-      humanTranslation: aiJson.translation || text,
+      humanTranslation: aiJson.translation || text || "Анализ завершен.",
       unspokenMotive: aiJson.unspokenMotive || defaultMotive,
       proTip: aiJson.advice || defaultAdvice,
       recommendedReply: aiJson.recommendedReply || defaultReply,
@@ -470,7 +545,7 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
 
   } catch (err) {
     console.error("Perplexity API Call Error:", err);
-    const localResult = analyzeVibeLocal(text, activeLang);
+    const localResult = analyzeVibeLocal(fullPromptText || text || 'вложение', activeLang);
     return {
       ...localResult,
       intent: localResult.intent || 'vibe_check',

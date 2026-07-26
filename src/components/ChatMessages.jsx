@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TRANSLATIONS } from '../data/translations';
-import { Bot, User, ChevronDown, ChevronUp, Zap, Info, ShieldAlert, BookOpen, Skull, Flame } from 'lucide-react';
+import { Bot, User, ChevronDown, ChevronUp, Zap, Info, ShieldAlert, BookOpen, Skull, Flame, FileText, AlertTriangle, Film } from 'lucide-react';
 
 const TONE_STYLES = {
   calm: { bg: 'bg-zinc-500/10', border: 'border-zinc-500/30', text: 'text-zinc-300', accent: 'text-zinc-400' },
@@ -27,7 +27,6 @@ function BotMessage({ msg, lang }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
   const [showDetails, setShowDetails] = useState(false);
   
-  // If intent is help, use 'help' style (emerald), otherwise use detectedTone style
   const toneStyle = msg.intent === 'help' ? TONE_STYLES.help : (TONE_STYLES[msg.detectedTone] || TONE_STYLES.calm);
 
   return (
@@ -117,6 +116,11 @@ function BotMessage({ msg, lang }) {
 }
 
 function UserMessage({ msg }) {
+  // Support array msg.attachments or legacy single msg.attachment
+  const attachmentList = Array.isArray(msg.attachments)
+    ? msg.attachments
+    : (msg.attachment ? [msg.attachment] : []);
+
   return (
     <div className="flex justify-end gap-3 mb-6 w-full">
       <div className="flex flex-col gap-1 max-w-[90%] md:max-w-[80%] items-end">
@@ -124,7 +128,61 @@ function UserMessage({ msg }) {
           <span className="text-[10px] text-zinc-600 font-mono">{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
           <span className="text-xs font-bold text-zinc-400">You</span>
         </div>
+
         <div className="p-4 rounded-3xl rounded-tr-sm bg-zinc-800 text-white text-sm md:text-base border border-zinc-700 leading-relaxed whitespace-pre-wrap break-words">
+          
+          {/* Render Attachments Grid if present */}
+          {attachmentList.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {attachmentList.map((att, idx) => (
+                <div key={idx} className="flex flex-col">
+                  {/* Single Image */}
+                  {att.type === 'image' && (att.thumbnail || att.images?.[0]) && (
+                    <img
+                      src={att.thumbnail || att.images[0]}
+                      alt={att.fileName || 'Attachment'}
+                      className="max-h-52 rounded-2xl object-cover border border-zinc-700"
+                    />
+                  )}
+
+                  {/* Video with Frame Thumbnails & Warning */}
+                  {att.type === 'video' && (
+                    <div className="flex flex-col gap-1.5">
+                      <div className="grid grid-cols-2 gap-1.5 max-w-xs">
+                        {(att.images || [att.thumbnail]).map((frameUrl, fIdx) => (
+                          <img
+                            key={fIdx}
+                            src={frameUrl}
+                            alt={`Frame ${fIdx + 1}`}
+                            className="w-full h-16 object-cover rounded-xl border border-zinc-700"
+                          />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-amber-400 font-mono bg-amber-950/40 border border-amber-800/40 p-1.5 rounded-xl">
+                        <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                        <span>Анализ сделан по 4 кадрам без звука</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Text/PDF File Card */}
+                  {(att.type === 'text' || att.type === 'pdf') && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-zinc-900 border border-zinc-700 text-xs">
+                      <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-mono font-bold text-zinc-200 truncate max-w-[180px]">{att.fileName}</span>
+                        <span className="text-[9px] text-zinc-500 font-mono uppercase">
+                          {att.type === 'pdf' ? 'PDF Документ' : 'Текст'} {att.truncated ? '(обрезано)' : ''}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Text Message */}
           {msg.text}
         </div>
       </div>

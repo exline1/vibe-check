@@ -110,13 +110,35 @@ export default function App() {
     });
   };
 
-  const handleSend = async (inputText) => {
+  const handleSend = async (payload) => {
     playSound('click');
-    
+
+    // payload can be string (legacy/presets) or object { text, attachments, attachment }
+    const inputText = typeof payload === 'string' ? payload : (payload.text || '');
+    let attachmentsList = [];
+    if (typeof payload === 'object') {
+      if (Array.isArray(payload.attachments)) {
+        attachmentsList = payload.attachments;
+      } else if (payload.attachment) {
+        attachmentsList = [payload.attachment];
+      }
+    }
+
+    const processedAttachmentsForMsg = attachmentsList.map(att => ({
+      type: att.type,
+      fileName: att.fileName,
+      thumbnail: att.thumbnail,
+      images: att.images ? att.images.slice(0, 4) : null,
+      truncated: att.truncated,
+      warning: att.warning
+    }));
+
     const userMsg = {
       id: generateId(),
       role: 'user',
       text: inputText,
+      attachments: processedAttachmentsForMsg.length > 0 ? processedAttachmentsForMsg : null,
+      attachment: processedAttachmentsForMsg[0] || null, // legacy fallback
       timestamp: Date.now()
     };
     
@@ -128,7 +150,7 @@ export default function App() {
       // Get last 8 messages for context
       const conversationHistory = newMessages.slice(-8);
       
-      const result = await analyzeVibeAI(inputText, lang, conversationHistory);
+      const result = await analyzeVibeAI(inputText, lang, conversationHistory, attachmentsList);
       
       const botMsg = {
         id: generateId(),
@@ -213,6 +235,7 @@ export default function App() {
             onSend={handleSend}
             disabled={isTyping}
             hasApiKey={hasApiKey}
+            onError={showToast}
           />
         </div>
 
