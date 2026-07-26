@@ -2,8 +2,8 @@ import { analyzeVibe as analyzeVibeLocal } from '../data/mockData.js';
 import { PERSONAS } from '../data/personas.js';
 import { getFormattedUserMemory } from './memoryService.js';
 
-// Constants for Perplexity Model Selection
-const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
+// Constants for Internal Serverless Proxy API
+const PROXY_CHAT_URL = '/api/chat';
 const PRIMARY_MODEL = 'sonar-pro';
 const FALLBACK_MODEL = 'sonar';
 
@@ -197,17 +197,7 @@ const VALID_TONES = ['calm', 'cocky', 'vulnerable', 'toxic'];
  * Checks if the API key is valid
  */
 export const getApiKey = () => {
-  if (typeof process !== 'undefined' && process.env) {
-    if (process.env.VITE_PERPLEXITY_API_KEY) return process.env.VITE_PERPLEXITY_API_KEY;
-    if (process.env.VITE_GROQ_API_KEY) return process.env.VITE_GROQ_API_KEY;
-  }
-  const key = typeof import.meta !== 'undefined' && import.meta.env
-    ? (import.meta.env.VITE_PERPLEXITY_API_KEY || import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_XAI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY)
-    : '';
-  if (!key || key.includes('your_') || key.includes('here')) {
-    return null;
-  }
-  return key.trim();
+  return 'proxy-enabled';
 };
 
 /**
@@ -472,42 +462,13 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [],
   };
 
   try {
-    let response = await fetch(PERPLEXITY_API_URL, {
+    const response = await fetch(PROXY_CHAT_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestBody)
     });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      const errorMsg = errData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
-      console.warn(`Perplexity Primary Model (${PRIMARY_MODEL}) call failed (${errorMsg}). Retrying without json_schema...`);
-      
-      delete requestBody.response_format;
-      response = await fetch(PERPLEXITY_API_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        requestBody.model = FALLBACK_MODEL;
-        response = await fetch(PERPLEXITY_API_URL, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(requestBody)
-        });
-      }
-    }
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -518,7 +479,7 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [],
     const data = await response.json();
     const contentText = data.choices?.[0]?.message?.content;
     if (!contentText) {
-      throw new Error("Received empty response from Perplexity API.");
+      throw new Error("Received empty response from AI engine.");
     }
 
     const aiJson = parseJsonFromText(contentText);
@@ -570,11 +531,13 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [],
       })),
       rawInput: text,
       isAiGenerated: true,
-      modelUsed: `fun.ai (${requestBody.model})`
+      modelUsed: `fun.ai Engine`
     };
 
   } catch (err) {
-    console.error("fun.ai API Call Error:", err);
+    if (import.meta.env.DEV) {
+      console.error("fun.ai API Call Error:", err);
+    }
     const localResult = analyzeVibeLocal(fullPromptText || text || 'вложение', activeLang, personaId);
     return {
       ...localResult,

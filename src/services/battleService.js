@@ -14,7 +14,9 @@ if (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_URL.includes('your_')) {
   try {
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   } catch (e) {
-    console.warn("Supabase init failed, falling back to local BroadcastChannel", e);
+    if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+      console.warn("Realtime sync fallback triggered:", e);
+    }
   }
 }
 

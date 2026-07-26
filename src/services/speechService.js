@@ -2,23 +2,12 @@
  * Speech Service: Groq STT (Whisper-large-v3-turbo) & Browser Web Speech API TTS
  */
 
-const GROQ_STT_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
+const PROXY_STT_URL = '/api/speech-to-text';
 
 /**
- * Transcribes audio blob using Groq Speech-to-Text API (Whisper-large-v3-turbo)
+ * Transcribes audio blob using serverless speech-to-text proxy
  */
 export async function transcribeAudioGroq(audioBlob, lang = 'RU') {
-  let apiKey = '';
-  if (typeof process !== 'undefined' && process.env && process.env.VITE_GROQ_API_KEY) {
-    apiKey = process.env.VITE_GROQ_API_KEY;
-  } else if (typeof import.meta !== 'undefined' && import.meta.env) {
-    apiKey = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_PERPLEXITY_API_KEY || '';
-  }
-
-  if (!apiKey || apiKey.includes('your_')) {
-    throw new Error('Для работы распознавания речи нужен VITE_GROQ_API_KEY в .env');
-  }
-
   const formData = new FormData();
   const file = new File([audioBlob], 'speech.webm', { type: audioBlob.type || 'audio/webm' });
   formData.append('file', file);
@@ -30,18 +19,15 @@ export async function transcribeAudioGroq(audioBlob, lang = 'RU') {
     formData.append('language', langCode);
   }
 
-  const response = await fetch(GROQ_STT_URL, {
+  const response = await fetch(PROXY_STT_URL, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`
-    },
     body: formData
   });
 
   if (!response.ok) {
     const errData = await response.json().catch(() => ({}));
     const errorMsg = errData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
-    throw new Error(`Ошибка распознавания Groq STT: ${errorMsg}`);
+    throw new Error(`Ошибка распознавания речи: ${errorMsg}`);
   }
 
   const data = await response.json();

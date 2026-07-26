@@ -1,49 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+
+  html, body, button, input, textarea, select {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  }
+
   body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #0B0813;
-    color: #F4F4F5;
+    background-color: #08080c;
+    color: #f4f4f5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
-  h1, h2, h3, .font-heading {
-    font-family: 'Outfit', sans-serif;
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    letter-spacing: -0.02em;
   }
 
   code, pre, .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace !important;
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar for Webkit Browsers */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0813;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #231C38;
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #392E5C;
+  background: rgba(255, 255, 255, 0.25);
 }
 
-/* Ambient Radial Background */
+/* Linear Glassmorphism Ambient Glow */
 .bg-radial-gradient {
-  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.15) 0%, rgba(11, 8, 19, 1) 75%);
-}
-
-.fun-glow {
-  box-shadow: 0 0 35px -5px rgba(168, 85, 247, 0.25);
-}
-
-.fun-border-glow {
-  box-shadow: 0 0 20px -3px rgba(147, 51, 234, 0.3);
+  background: 
+    radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.04) 0%, transparent 50%),
+    #08080c;
 }

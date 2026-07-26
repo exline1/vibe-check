@@ -160,19 +160,19 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-[#120E24] border border-[#2D244D] rounded-3xl max-w-2xl w-full h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
+      <div className="bg-[#0d0d14]/90 backdrop-blur-2xl border border-white/[0.1] rounded-[40px] max-w-2xl w-full h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#231B40] bg-[#16112C]">
+        <div className="flex items-center justify-between p-4 border-b border-white/[0.08] bg-white/[0.02]">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-600 to-purple-800 flex items-center justify-center text-white shadow-lg">
-              <Swords className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-sm">
+              <Swords className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold font-heading text-white flex items-center gap-2">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
                 {t.roastBattle || "fun.ai Roast Battle"}
                 {isInRoom && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-purple-950 border border-purple-800 text-purple-300 font-mono">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-mono">
                     {roomCode}
                   </span>
                 )}
@@ -185,7 +185,7 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-[#20193D] hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -195,15 +195,15 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
         {!isInRoom ? (
           /* Lobby Screen */
           <div className="flex-1 p-6 flex flex-col justify-center items-center text-center">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-purple-600 to-pink-600 flex items-center justify-center text-white mb-4 shadow-xl animate-pulse">
-              <Flame className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4 shadow-xl">
+              <Flame className="w-7 h-7" />
             </div>
 
-            <h4 className="text-xl font-extrabold font-heading text-white mb-2">
-              Вызовите друга на Roast Battle ⚔️
+            <h4 className="text-xl font-bold text-white mb-2">
+              Вызовите друга на Roast Battle
             </h4>
             <p className="text-xs text-zinc-400 max-w-sm mb-6 leading-relaxed">
-              Оба участника пишут колкости в один чат, а fun.ai выносит жесткий вердикт и выбирает победителя!
+              Оба участника пишут колкости в один чат, а fun.ai выносит вердикт и выбирает победителя!
             </p>
 
             <div className="w-full max-w-xs flex flex-col gap-4">
@@ -214,23 +214,23 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
                   type="text"
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
-                  className="w-full bg-[#181330] border border-[#2D234A] rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-purple-500"
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-full px-4 py-2 text-sm text-white outline-none focus:border-indigo-500/50"
                 />
               </div>
 
               {/* Create Room Button */}
               <button
                 onClick={handleCreateRoom}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold font-heading text-sm shadow-lg active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-full bg-white text-black hover:bg-zinc-200 font-semibold text-sm shadow-lg active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
                 <Swords className="w-4 h-4" />
                 {t.createRoomBtn || "Создать Дуэль"}
               </button>
 
               <div className="flex items-center gap-2 my-1">
-                <div className="h-px bg-zinc-800 flex-1"></div>
+                <div className="h-px bg-white/[0.08] flex-1"></div>
                 <span className="text-[10px] text-zinc-500 uppercase font-mono">или</span>
-                <div className="h-px bg-zinc-800 flex-1"></div>
+                <div className="h-px bg-white/[0.08] flex-1"></div>
               </div>
 
               {/* Join Room */}
@@ -240,11 +240,11 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
                   placeholder="Код комнаты (ROAST-XXXX)"
                   value={inputCode}
                   onChange={(e) => setInputCode(e.target.value)}
-                  className="w-full bg-[#181330] border border-[#2D234A] rounded-xl px-3 py-2 text-xs text-white outline-none uppercase font-mono"
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-full px-4 py-2 text-xs text-white outline-none uppercase font-mono"
                 />
                 <button
                   onClick={handleJoinRoom}
-                  className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold font-heading transition-colors cursor-pointer flex-shrink-0"
+                  className="px-4 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-white text-xs font-semibold transition-colors cursor-pointer flex-shrink-0 border border-white/[0.1]"
                 >
                   {t.joinRoomBtn || "Войти"}
                 </button>
@@ -255,10 +255,10 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
           /* Active Room Screen */
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Scoreboard Bar */}
-            <div className="px-4 py-2 bg-[#17122E] border-b border-[#251D42] flex items-center justify-between text-xs font-mono">
+            <div className="px-4 py-2.5 bg-white/[0.03] border-b border-white/[0.08] flex items-center justify-between text-xs font-mono">
               <div className="flex items-center gap-2">
-                <span className="text-purple-300 font-bold">{playerName} ({playerRole}):</span>
-                <span className="px-2 py-0.5 rounded-lg bg-purple-950 border border-purple-800 text-purple-300 font-bold">
+                <span className="text-zinc-200 font-semibold">{playerName} ({playerRole}):</span>
+                <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold">
                   {playerRole === 'player1' ? scores.player1 : scores.player2} pts
                 </span>
               </div>
@@ -274,7 +274,7 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
 
               <button
                 onClick={handleFinishBattle}
-                className="px-2.5 py-1 rounded-lg bg-red-950/60 hover:bg-red-900/80 border border-red-800/40 text-red-300 text-[10px] font-bold"
+                className="px-3 py-1 rounded-full bg-rose-950/30 hover:bg-rose-900/50 border border-rose-500/30 text-rose-300 text-[10px] font-semibold"
               >
                 Итоги
               </button>
@@ -285,7 +285,7 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
               {battleMessages.map((m) => {
                 if (m.sender === 'system') {
                   return (
-                    <div key={m.id} className="text-center my-2 text-xs font-mono text-zinc-500 bg-[#16112C] py-1.5 px-3 rounded-full self-center border border-[#231B40]">
+                    <div key={m.id} className="text-center my-2 text-xs font-mono text-zinc-400 bg-white/[0.04] py-1.5 px-3 rounded-full self-center border border-white/[0.08]">
                       {m.text}
                     </div>
                   );
@@ -293,12 +293,12 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
 
                 if (m.role === 'referee') {
                   return (
-                    <div key={m.id} className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950/60 to-pink-950/60 border border-purple-800/50 my-1">
-                      <div className="flex items-center gap-2 mb-1 text-xs font-bold text-purple-300">
-                        <span>{m.badgeEmoji || '⚔️'}</span>
+                    <div key={m.id} className="p-4 rounded-[24px] bg-indigo-950/20 border border-indigo-500/30 my-1">
+                      <div className="flex items-center gap-2 mb-1 text-xs font-semibold text-indigo-300">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
                         <span>{m.sender}</span>
                       </div>
-                      <p className="text-sm text-purple-100 leading-relaxed font-medium">{m.text}</p>
+                      <p className="text-sm text-zinc-200 leading-relaxed font-medium">{m.text}</p>
                     </div>
                   );
                 }
@@ -307,7 +307,7 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
                 return (
                   <div key={m.id} className={`flex flex-col max-w-[80%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`}>
                     <span className="text-[10px] text-zinc-500 font-mono mb-0.5">{m.sender}</span>
-                    <div className={`p-3 rounded-2xl text-sm ${isMe ? 'bg-purple-600 text-white rounded-tr-sm' : 'bg-zinc-800 text-zinc-100 rounded-tl-sm border border-zinc-700'}`}>
+                    <div className={`p-3.5 rounded-[24px] text-sm ${isMe ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-white/[0.05] text-zinc-100 rounded-tl-sm border border-white/[0.08]'}`}>
                       {m.text}
                     </div>
                   </div>
@@ -315,9 +315,9 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
               })}
 
               {isJudging && (
-                <div className="text-xs text-purple-400 font-mono animate-pulse flex items-center gap-2 p-2">
-                  <Flame className="w-4 h-4 text-orange-400 animate-bounce" />
-                  fun.ai оценивает панч и выносит судейский вердикт...
+                <div className="text-xs text-indigo-400 font-mono animate-pulse flex items-center gap-2 p-2">
+                  <Flame className="w-4 h-4 text-indigo-400 animate-bounce" />
+                  fun.ai оценивает панч и выносит вердикт...
                 </div>
               )}
 
@@ -326,7 +326,7 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
 
             {/* Input Bar */}
             {!battleFinished ? (
-              <div className="p-3 bg-[#16112C] border-t border-[#251D42] flex items-center gap-2">
+              <div className="p-3 bg-white/[0.02] border-t border-white/[0.08] flex items-center gap-2">
                 <input
                   type="text"
                   value={inputMsg}
@@ -334,30 +334,30 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
                   onKeyDown={(e) => e.key === 'Enter' && handleSendBattleMsg()}
                   disabled={isJudging}
                   placeholder="Напишите свой панч/колкость..."
-                  className="flex-1 bg-[#1A1435] border border-[#2E2452] rounded-2xl px-4 py-2.5 text-sm text-white outline-none focus:border-purple-500"
+                  className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-full px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500/50"
                 />
                 <button
                   onClick={handleSendBattleMsg}
                   disabled={!inputMsg.trim() || isJudging}
-                  className="w-10 h-10 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center disabled:opacity-40 transition-all cursor-pointer flex-shrink-0"
+                  className="w-10 h-10 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center disabled:opacity-30 transition-all cursor-pointer flex-shrink-0 shadow-md"
                 >
                   <Send className="w-4 h-4 ml-0.5" />
                 </button>
               </div>
             ) : (
-              <div className="p-4 bg-gradient-to-r from-purple-950 to-pink-950 text-center border-t border-purple-800/50">
-                <Trophy className="w-8 h-8 text-yellow-400 mx-auto mb-2 animate-bounce" />
+              <div className="p-4 bg-white/[0.04] text-center border-t border-white/[0.08]">
+                <Trophy className="w-8 h-8 text-amber-400 mx-auto mb-2 animate-bounce" />
                 <h4 className="text-base font-bold text-white mb-1">Дуэль Завершена!</h4>
-                <p className="text-xs text-purple-200 mb-3">
+                <p className="text-xs text-zinc-300 mb-3">
                   {scores.player1 > scores.player2 
                     ? `Победитель: Игрок 1 (${scores.player1} pts)!` 
                     : scores.player2 > scores.player1 
                       ? `Победитель: Игрок 2 (${scores.player2} pts)!` 
-                      : 'Ничья! Оба игрока показали мощный вайб!'}
+                      : 'Ничья! Оба игрока показали отличный результат!'}
                 </p>
                 <button
                   onClick={() => setIsInRoom(false)}
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold"
+                  className="px-5 py-2 rounded-full bg-white text-black hover:bg-zinc-200 text-xs font-semibold"
                 >
                   Новая Дуэль
                 </button>

@@ -7,6 +7,7 @@ import HistoryModal from './components/HistoryModal';
 import PersonaSelector from './components/PersonaSelector';
 import MemoryModal from './components/MemoryModal';
 import RoastBattleModal from './components/RoastBattleModal';
+import DisclaimerModal from './components/DisclaimerModal';
 import Toast from './components/Toast';
 import { analyzeVibeAI, getApiKey } from './services/aiService';
 import { speakText, stopSpeech } from './services/speechService';
@@ -26,6 +27,7 @@ export default function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isMemoryOpen, setIsMemoryOpen] = useState(false);
   const [isBattleOpen, setIsBattleOpen] = useState(false);
+  const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
 
   // Active persona selection ('troll', 'therapist', 'flexer', 'philosopher')
   const [activePersonaId, setActivePersonaId] = useState('troll');
@@ -267,7 +269,7 @@ export default function App() {
   };
 
   return (
-    <div className="bg-[#0B0813] text-zinc-100 h-screen flex flex-col bg-radial-gradient relative overflow-hidden font-sans">
+    <div className="bg-[#09090b] text-zinc-100 h-screen flex flex-col bg-radial-gradient relative overflow-hidden font-sans">
       <div className="max-w-[1050px] w-full mx-auto px-2 sm:px-6 flex flex-col h-full relative z-10">
         
         {/* Navigation Bar */}
@@ -285,6 +287,10 @@ export default function App() {
             playSound('click');
             setIsBattleOpen(true);
           }}
+          onOpenDisclaimer={() => {
+            playSound('click');
+            setIsDisclaimerOpen(true);
+          }}
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled(!soundEnabled)}
           lang={lang}
@@ -294,7 +300,7 @@ export default function App() {
 
         {/* Show Header & Persona Selector when chat is starting */}
         {messages.length === 0 && (
-          <div className="mt-4 flex flex-col items-center px-2">
+          <div className="mt-2 flex flex-col items-center px-2">
             <Header lang={lang} />
           </div>
         )}
@@ -355,6 +361,13 @@ export default function App() {
         onClose={() => setIsBattleOpen(false)}
         lang={lang}
         activePersonaId={activePersonaId}
+      />
+
+      {/* Disclaimers & Safety Modal */}
+      <DisclaimerModal
+        isOpen={isDisclaimerOpen}
+        onClose={() => setIsDisclaimerOpen(false)}
+        lang={lang}
       />
 
       {/* Floating Notification Toast */}
