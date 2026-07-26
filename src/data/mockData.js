@@ -160,7 +160,7 @@ export function analyzeVibe(inputText, lang = 'RU') {
   let verdict = lang === 'UZ' ? "Krinj Diagnostika" : lang === 'RU' ? "Нейтральный Ввод" : "Neutral Input";
   let verdictSubtext = lang === 'UZ' ? "Matn tahlil qilindi." : "Стандартный текст.";
   let badgeEmoji = "📊";
-  let badgeLabel = lang === 'UZ' ? "Vayb Sudyasi" : "Vibe Judge";
+  let badgeLabel = "fun.ai";
 
   const getDescriptor = (score, type) => {
     if (lang === 'UZ') {

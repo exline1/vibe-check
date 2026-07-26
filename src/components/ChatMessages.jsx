@@ -32,16 +32,16 @@ function BotMessage({ msg, lang, onSpeakMsg, isSpeaking, speakingMsgId }) {
 
   return (
     <div className="flex gap-3 mb-6 w-full group">
-      <div className={`w-8 h-8 rounded-full bg-zinc-900 border ${isThisMsgSpeaking ? 'border-emerald-500 ring-2 ring-emerald-500/40 animate-pulse' : 'border-zinc-700'} flex items-center justify-center flex-shrink-0 mt-1 transition-all`}>
-        <Bot className={`w-4 h-4 ${isThisMsgSpeaking ? 'text-emerald-400' : toneStyle.accent}`} />
+      <div className={`w-9 h-9 rounded-2xl bg-[#140E29] border ${isThisMsgSpeaking ? 'border-purple-500 ring-2 ring-purple-500/40 animate-pulse' : 'border-[#271E47]'} flex items-center justify-center flex-shrink-0 mt-1 transition-all text-base shadow-md`}>
+        {msg.personaAvatar || "🤖"}
       </div>
       
       <div className="flex flex-col gap-1 max-w-[92%] md:max-w-[85%]">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-zinc-400">Vibe Judge</span>
-          <span className="text-[10px] text-zinc-600 font-mono">{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+          <span className="text-xs font-bold font-heading text-purple-300">fun.ai</span>
+          <span className="text-[10px] text-zinc-500 font-mono">{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
           {msg.badgeEmoji && (
-            <span className={`text-[10px] px-2 py-0.5 rounded-full bg-[#111] border border-[#222] ${toneStyle.accent}`}>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full bg-[#120E22] border border-[#231A3D] ${toneStyle.accent}`}>
               {msg.badgeEmoji} {msg.badgeLabel}
             </span>
           )}

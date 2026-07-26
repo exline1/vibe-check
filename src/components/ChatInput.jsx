@@ -307,9 +307,9 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
       </form>
 
       <div className="flex justify-center mt-3">
-        <span className="flex items-center gap-1.5 px-3 py-1 bg-[#0A0A0A] rounded-full border border-[#1F1F1F] text-[10px] text-zinc-500 font-mono tracking-wide">
-          <Sparkles className={`w-3 h-3 ${hasApiKey ? 'text-emerald-400' : 'text-amber-500'}`} />
-          {hasApiKey ? 'Perplexity Sonar-Pro & Groq Whisper (Active)' : 'Local Heuristic (Fallback)'}
+        <span className="flex items-center gap-1.5 px-3 py-1 bg-[#120E22] rounded-full border border-[#271F47] text-[10px] text-purple-300 font-mono tracking-wide">
+          <Sparkles className={`w-3 h-3 ${hasApiKey ? 'text-purple-400' : 'text-amber-500'}`} />
+          {hasApiKey ? 'fun.ai Engine (Perplexity + Groq Active)' : 'Local Heuristic (Fallback)'}
         </span>
       </div>
     </div>

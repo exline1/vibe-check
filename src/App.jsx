@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Header from './components/Header';
 import ChatInput from './components/ChatInput';
 import ChatMessages from './components/ChatMessages';
 import HistoryModal from './components/HistoryModal';
+import PersonaSelector from './components/PersonaSelector';
+import MemoryModal from './components/MemoryModal';
+import RoastBattleModal from './components/RoastBattleModal';
 import Toast from './components/Toast';
 import { analyzeVibeAI, getApiKey } from './services/aiService';
 import { speakText, stopSpeech } from './services/speechService';
+import { summarizeAndStoreMemory } from './services/memoryService';
 import { TRANSLATIONS } from './data/translations';
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
@@ -18,26 +21,34 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(generateId());
+  
+  // Modals state
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isMemoryOpen, setIsMemoryOpen] = useState(false);
+  const [isBattleOpen, setIsBattleOpen] = useState(false);
+
+  // Active persona selection ('troll', 'therapist', 'flexer', 'philosopher')
+  const [activePersonaId, setActivePersonaId] = useState('troll');
+
   const [toastMessage, setToastMessage] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState(null);
 
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
-  const hasApiKey = !!getApiKey();
+  const apiKey = getApiKey();
+  const hasApiKey = !!apiKey;
 
-  // Load history, lang & TTS preferences from LocalStorage
+  // Load history, lang & persona preferences from LocalStorage
   useEffect(() => {
     try {
-      const savedLang = localStorage.getItem('vibe_check_lang');
+      const savedLang = localStorage.getItem('fun_ai_lang');
       if (savedLang) setLang(savedLang);
 
-      const savedTts = localStorage.getItem('vibe_check_tts');
-      if (savedTts !== null) setTtsEnabled(savedTts === 'true');
+      const savedPersona = localStorage.getItem('fun_ai_persona');
+      if (savedPersona) setActivePersonaId(savedPersona);
 
-      const saved = localStorage.getItem('vibe_check_conversations');
+      const saved = localStorage.getItem('fun_ai_conversations');
       if (saved) {
         setConversations(JSON.parse(saved));
       }
@@ -54,21 +65,15 @@ export default function App() {
 
     setLang(nextLang);
     try {
-      localStorage.setItem('vibe_check_lang', nextLang);
+      localStorage.setItem('fun_ai_lang', nextLang);
     } catch (e) {}
     playSound('click');
   };
 
-  const handleToggleTts = () => {
-    const nextTts = !ttsEnabled;
-    setTtsEnabled(nextTts);
-    if (!nextTts) {
-      stopSpeech();
-      setIsSpeaking(false);
-      setSpeakingMsgId(null);
-    }
+  const handleSelectPersona = (personaId) => {
+    setActivePersonaId(personaId);
     try {
-      localStorage.setItem('vibe_check_tts', String(nextTts));
+      localStorage.setItem('fun_ai_persona', personaId);
     } catch (e) {}
     playSound('click');
   };
@@ -92,8 +97,8 @@ export default function App() {
         osc.stop(ctx.currentTime + 0.08);
       } else if (type === 'success') {
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.15); // E5
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.08, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
         osc.start();
@@ -141,18 +146,19 @@ export default function App() {
       let updated;
       
       if (existing) {
-        updated = prev.map(c => c.id === currentId ? { ...c, messages: updatedMessages, timestamp: new Date().toLocaleString() } : c);
+        updated = prev.map(c => c.id === currentId ? { ...c, messages: updatedMessages, personaId: activePersonaId, timestamp: new Date().toLocaleString() } : c);
       } else {
         const newConv = {
           id: currentId,
+          personaId: activePersonaId,
           timestamp: new Date().toLocaleString(),
           messages: updatedMessages
         };
-        updated = [newConv, ...prev].slice(0, 50); // Keep last 50
+        updated = [newConv, ...prev].slice(0, 50);
       }
       
       try {
-        localStorage.setItem('vibe_check_conversations', JSON.stringify(updated));
+        localStorage.setItem('fun_ai_conversations', JSON.stringify(updated));
       } catch (e) {}
       
       return updated;
@@ -162,7 +168,6 @@ export default function App() {
   const handleSend = async (payload) => {
     playSound('click');
 
-    // Interrupt any ongoing speech when user sends a new message
     stopSpeech();
     setIsSpeaking(false);
     setSpeakingMsgId(null);
@@ -194,7 +199,7 @@ export default function App() {
       text: inputText,
       isVoice,
       attachments: processedAttachmentsForMsg.length > 0 ? processedAttachmentsForMsg : null,
-      attachment: processedAttachmentsForMsg[0] || null, // legacy fallback
+      attachment: processedAttachmentsForMsg[0] || null,
       timestamp: Date.now()
     };
     
@@ -205,7 +210,7 @@ export default function App() {
     try {
       const conversationHistory = newMessages.slice(-8);
       
-      const result = await analyzeVibeAI(inputText, lang, conversationHistory, attachmentsList);
+      const result = await analyzeVibeAI(inputText, lang, conversationHistory, attachmentsList, activePersonaId);
       
       const botMsg = {
         id: generateId(),
@@ -222,8 +227,11 @@ export default function App() {
 
       saveConversation(finalMessages, activeConversationId);
 
+      // Async trigger long-term memory summarization in background
+      summarizeAndStoreMemory(finalMessages, apiKey);
+
     } catch (err) {
-      console.error("Vibe analysis error:", err);
+      console.error("fun.ai analysis error:", err);
       setIsTyping(false);
       showToast(lang === 'RU' ? 'Ошибка анализа' : lang === 'UZ' ? 'Tahlil xatosi' : 'Analysis error');
     }
@@ -241,7 +249,7 @@ export default function App() {
   const handleClearHistory = () => {
     setConversations([]);
     try {
-      localStorage.removeItem('vibe_check_conversations');
+      localStorage.removeItem('fun_ai_conversations');
     } catch (e) {}
     showToast(lang === 'RU' ? 'История диалогов очищена.' : lang === 'UZ' ? 'Suhbatlar tarixi tozalandi.' : 'Chat history cleared.');
     if (messages.length > 0) {
@@ -253,13 +261,14 @@ export default function App() {
     stopSpeech();
     setIsSpeaking(false);
     setSpeakingMsgId(null);
+    if (chat.personaId) setActivePersonaId(chat.personaId);
     setMessages(chat.messages || []);
     setActiveConversationId(chat.id);
   };
 
   return (
-    <div className="bg-black text-white h-screen flex flex-col bg-radial-gradient relative overflow-hidden">
-      <div className="max-w-[1000px] w-full mx-auto px-2 sm:px-6 flex flex-col h-full relative z-10">
+    <div className="bg-[#0B0813] text-zinc-100 h-screen flex flex-col bg-radial-gradient relative overflow-hidden font-sans">
+      <div className="max-w-[1050px] w-full mx-auto px-2 sm:px-6 flex flex-col h-full relative z-10">
         
         {/* Navigation Bar */}
         <Navbar
@@ -268,20 +277,35 @@ export default function App() {
             playSound('click');
             setIsHistoryOpen(true);
           }}
+          onOpenMemory={() => {
+            playSound('click');
+            setIsMemoryOpen(true);
+          }}
+          onOpenBattle={() => {
+            playSound('click');
+            setIsBattleOpen(true);
+          }}
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled(!soundEnabled)}
-          ttsEnabled={ttsEnabled}
-          onToggleTts={handleToggleTts}
           lang={lang}
           onToggleLang={handleToggleLang}
           onNewChat={handleNewChat}
         />
 
-        {/* Show Header only if chat is empty */}
+        {/* Show Header & Persona Selector when chat is starting */}
         {messages.length === 0 && (
-          <div className="mt-8 flex flex-col items-center px-2">
+          <div className="mt-4 flex flex-col items-center px-2">
             <Header lang={lang} />
           </div>
+        )}
+
+        {/* Persona Selector Bar */}
+        {messages.length <= 2 && (
+          <PersonaSelector
+            activePersonaId={activePersonaId}
+            onSelectPersona={handleSelectPersona}
+            lang={lang}
+          />
         )}
 
         {/* Chat Messages */}
@@ -315,6 +339,22 @@ export default function App() {
         onSelectHistoryItem={handleSelectHistoryItem}
         onClearHistory={handleClearHistory}
         lang={lang}
+      />
+
+      {/* Long-Term Memory Modal */}
+      <MemoryModal
+        isOpen={isMemoryOpen}
+        onClose={() => setIsMemoryOpen(false)}
+        lang={lang}
+        onMemoryCleared={() => showToast(t.memoryCleared || "Память очищена.")}
+      />
+
+      {/* Realtime Roast Battle Modal */}
+      <RoastBattleModal
+        isOpen={isBattleOpen}
+        onClose={() => setIsBattleOpen(false)}
+        lang={lang}
+        activePersonaId={activePersonaId}
       />
 
       {/* Floating Notification Toast */}

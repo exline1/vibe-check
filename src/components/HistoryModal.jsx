@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Clock, ArrowUpRight, Zap, MessageSquare } from 'lucide-react';
 import { TRANSLATIONS } from '../data/translations';
+import { PERSONAS } from '../data/personas';
 
 export default function HistoryModal({ isOpen, onClose, history, onSelectHistoryItem, onClearHistory, lang }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
@@ -24,24 +25,24 @@ export default function HistoryModal({ isOpen, onClose, history, onSelectHistory
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.2 }}
-          className="relative w-full max-w-xl rounded-[32px] bg-[#0A0A0A] border border-[#1F1F1F] p-4 md:p-6 shadow-2xl z-10 max-h-[85vh] flex flex-col"
+          className="relative w-full max-w-xl rounded-[32px] bg-[#120E24] border border-[#2D244D] p-4 md:p-6 shadow-2xl z-10 max-h-[85vh] flex flex-col"
         >
-          <div className="flex items-center justify-between pb-4 border-b border-[#1F1F1F]">
+          <div className="flex items-center justify-between pb-4 border-b border-[#231B40]">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-zinc-400" />
-              <h3 className="text-base font-bold text-white">{t.chatHistory || "Chat History"}</h3>
+              <Clock className="w-4 h-4 text-purple-400" />
+              <h3 className="text-base font-bold font-heading text-white">{t.chatHistory || "fun.ai Chat History"}</h3>
               <span className="text-xs font-mono text-zinc-500">({history.length})</span>
             </div>
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-[#111111] hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-[#1D173B] hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
+          <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1 scrollbar-thin">
             {history.length === 0 ? (
               <div className="text-center py-12 space-y-2">
                 <Zap className="w-8 h-8 text-zinc-700 mx-auto" />
@@ -52,6 +53,7 @@ export default function HistoryModal({ isOpen, onClose, history, onSelectHistory
               history.map((chat) => {
                 const firstUserMsg = chat.messages.find(m => m.role === 'user');
                 const textPreview = firstUserMsg ? firstUserMsg.text : "Empty Chat";
+                const personaObj = PERSONAS[chat.personaId] || PERSONAS.troll;
                 
                 return (
                   <div
@@ -60,13 +62,13 @@ export default function HistoryModal({ isOpen, onClose, history, onSelectHistory
                       onSelectHistoryItem(chat);
                       onClose();
                     }}
-                    className="p-4 rounded-2xl bg-[#111111] hover:bg-[#161616] border border-[#1F1F1F] hover:border-[#333333] transition-all cursor-pointer group space-y-2"
+                    className="p-4 rounded-2xl bg-[#181330] hover:bg-[#1E183D] border border-[#2B234A] hover:border-purple-500/50 transition-all cursor-pointer group space-y-2"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
-                        <span className="text-xs font-bold text-white group-hover:text-zinc-200">
-                          Chat Session
+                        <span className="text-base">{personaObj.avatar}</span>
+                        <span className="text-xs font-bold font-heading text-white group-hover:text-purple-300">
+                          {t[personaObj.nameKey] || 'fun.ai'}
                         </span>
                       </div>
                       <span className="text-[10px] font-mono text-zinc-500">
@@ -78,9 +80,9 @@ export default function HistoryModal({ isOpen, onClose, history, onSelectHistory
                       "{textPreview}"
                     </p>
 
-                    <div className="flex items-center justify-between text-[11px] pt-1 text-zinc-500 border-t border-[#1F1F1F]/50">
+                    <div className="flex items-center justify-between text-[11px] pt-1 text-zinc-500 border-t border-[#251E3E]">
                       <span>{chat.messages.length} {t.messagesCount || "messages"}</span>
-                      <span className="text-zinc-400 group-hover:text-emerald-400 flex items-center gap-1 font-semibold transition-colors">
+                      <span className="text-purple-400 group-hover:text-purple-300 flex items-center gap-1 font-semibold transition-colors">
                         Load Chat <ArrowUpRight className="w-3 h-3" />
                       </span>
                     </div>
@@ -91,7 +93,7 @@ export default function HistoryModal({ isOpen, onClose, history, onSelectHistory
           </div>
 
           {history.length > 0 && (
-            <div className="pt-4 border-t border-[#1F1F1F] flex items-center justify-between">
+            <div className="pt-4 border-t border-[#231B40] flex items-center justify-between">
               <button
                 onClick={onClearHistory}
                 className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/30 hover:bg-red-950/50 border border-red-900/50 transition-colors cursor-pointer"
@@ -102,7 +104,7 @@ export default function HistoryModal({ isOpen, onClose, history, onSelectHistory
 
               <button
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold font-heading transition-colors cursor-pointer"
               >
                 {t.close}
               </button>
