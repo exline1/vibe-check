@@ -1,9 +1,9 @@
 import { analyzeVibe as analyzeVibeLocal } from '../data/mockData.js';
 
-// Constants for Model Selection
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const PRIMARY_MODEL = 'llama-3.3-70b-versatile';
-const FALLBACK_MODEL = 'llama-3.1-8b-instant';
+// Constants for Perplexity Model Selection
+const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
+const PRIMARY_MODEL = 'sonar-pro';
+const FALLBACK_MODEL = 'sonar';
 
 /**
  * System Prompt RU
@@ -206,29 +206,43 @@ JSON Format (STRICTLY):
 const VALID_TONES = ['calm', 'cocky', 'vulnerable', 'toxic'];
 
 /**
- * Checks if the API key is valid
+ * Checks if the API key is valid (prefers Perplexity, falls back to Groq/others)
  */
 export const getApiKey = () => {
-  if (typeof process !== 'undefined' && process.env && process.env.VITE_GROQ_API_KEY) {
-    return process.env.VITE_GROQ_API_KEY;
+  if (typeof process !== 'undefined' && process.env) {
+    if (process.env.VITE_PERPLEXITY_API_KEY) return process.env.VITE_PERPLEXITY_API_KEY;
+    if (process.env.VITE_GROQ_API_KEY) return process.env.VITE_GROQ_API_KEY;
   }
-  const key = typeof import.meta !== 'undefined' && import.meta.env ? (import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_PERPLEXITY_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_XAI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY) : '';
+  const key = typeof import.meta !== 'undefined' && import.meta.env
+    ? (import.meta.env.VITE_PERPLEXITY_API_KEY || import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_XAI_API_KEY || import.meta.env.VITE_OPENAI_API_KEY)
+    : '';
   if (!key || key.includes('your_') || key.includes('here')) {
     return null;
   }
   return key.trim();
-}
+};
 
 /**
  * Helper to safely extract JSON from AI response strings
  */
 function parseJsonFromText(rawText) {
   let cleaned = rawText.trim();
-  if (cleaned.startsWith('\`\`\`json')) {
-    cleaned = cleaned.replace(/^\`\`\`json\s*/, '').replace(/\s*\`\`\`$/, '');
-  } else if (cleaned.startsWith('\`\`\`')) {
-    cleaned = cleaned.replace(/^\`\`\`\s*/, '').replace(/\s*\`\`\`$/, '');
+  // Remove markdown code fence if present
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
   }
+  // Remove possible reasoning blocks <think>...</think> from models like R1 / Sonar Reasoning
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  
+  // Try to locate JSON bounds if extra text was included
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  }
+
   return JSON.parse(cleaned);
 }
 
@@ -262,13 +276,58 @@ function detectUzbek(text) {
 }
 
 /**
- * Analyzes vibe using Groq API with adaptive tone detection + deep situational context + chat history
+ * JSON Schema definition for Perplexity API Structured Output
+ */
+const RESPONSE_JSON_SCHEMA = {
+  name: "vibe_check_response",
+  schema: {
+    type: "object",
+    properties: {
+      intent: { type: "string", enum: ["vibe_check", "help"] },
+      detectedTone: { type: "string", enum: ["calm", "cocky", "vulnerable", "toxic"] },
+      verdict: { type: "string" },
+      verdictSubtext: { type: "string" },
+      badgeEmoji: { type: "string" },
+      badgeLabel: { type: "string" },
+      confidence: { type: "string" },
+      stats: {
+        type: "object",
+        properties: {
+          sarcasm: { type: "number" },
+          toxicity: { type: "number" },
+          stuffiness: { type: "number" },
+          vibe: { type: "number" }
+        },
+        required: ["sarcasm", "toxicity", "stuffiness", "vibe"]
+      },
+      translation: { type: "string" },
+      unspokenMotive: { type: "string" },
+      advice: { type: "string" },
+      recommendedReply: { type: "string" },
+      detectedSlang: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            word: { type: "string" },
+            meaning: { type: "string" }
+          },
+          required: ["word", "meaning"]
+        }
+      }
+    },
+    required: ["intent", "detectedTone", "verdict", "verdictSubtext", "badgeEmoji", "badgeLabel", "confidence", "stats", "translation", "unspokenMotive", "advice", "recommendedReply", "detectedSlang"]
+  }
+};
+
+/**
+ * Analyzes vibe using Perplexity API with adaptive tone detection + chat history
  */
 export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = []) {
   const apiKey = getApiKey();
 
   if (!apiKey) {
-    console.warn("Groq API Key (VITE_GROQ_API_KEY) not found in .env. Falling back to local heuristic analyzer.");
+    console.warn("Perplexity API Key (VITE_PERPLEXITY_API_KEY) not found in .env. Falling back to local heuristic analyzer.");
     const localResult = analyzeVibeLocal(text, lang);
     return {
       ...localResult,
@@ -298,7 +357,6 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
 
   const formattedHistory = conversationHistory.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'assistant',
-    // Fallback to msg.text if msg.translation is undefined
     content: msg.role === 'user' ? (msg.text || msg.rawInput || '') : (msg.translation || msg.text || '')
   }));
 
@@ -312,12 +370,14 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
     temperature: 0.85,
     max_tokens: 1500,
     frequency_penalty: 0.3,
-    presence_penalty: 0.2,
-    response_format: { type: "json_object" }
+    response_format: {
+      type: "json_schema",
+      json_schema: RESPONSE_JSON_SCHEMA
+    }
   };
 
   try {
-    let response = await fetch(GROQ_API_URL, {
+    let response = await fetch(PERPLEXITY_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -326,13 +386,17 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
       body: JSON.stringify(requestBody)
     });
 
+    // Fallback attempt with primary model without json_schema if json_schema fails
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
       const errorMsg = errData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
-      console.warn(`Groq Primary Model (${PRIMARY_MODEL}) failed. Code: ${errData.error?.code}, Type: ${errData.error?.type}. Message: ${errorMsg}`);
+      console.warn(`Perplexity Primary Model (${PRIMARY_MODEL}) with json_schema failed (${errorMsg}). Trying fallback model (${FALLBACK_MODEL})...`);
       
       requestBody.model = FALLBACK_MODEL;
-      response = await fetch(GROQ_API_URL, {
+      // Also try json_object type or prompt enforcement if json_schema unsupported
+      delete requestBody.response_format;
+      
+      response = await fetch(PERPLEXITY_API_URL, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -351,7 +415,7 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
     const data = await response.json();
     const contentText = data.choices?.[0]?.message?.content;
     if (!contentText) {
-      throw new Error("Received empty response from Groq API.");
+      throw new Error("Received empty response from Perplexity API.");
     }
 
     const aiJson = parseJsonFromText(contentText);
@@ -364,7 +428,6 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
     const rawTone = aiJson.detectedTone;
     const detectedTone = VALID_TONES.includes(rawTone) ? rawTone : 'calm';
     
-    // Fallback if intent is missing
     const intent = aiJson.intent === 'help' ? 'help' : 'vibe_check';
 
     const defaultVerdict = isUzbekText ? "Vibe Judge Hukmi" : activeLang === 'EN' ? "Vibe Judge Verdict" : "Vibe Judge Вердикт";
@@ -402,11 +465,11 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [])
       })),
       rawInput: text,
       isAiGenerated: true,
-      modelUsed: `Groq (${requestBody.model})`
+      modelUsed: `Perplexity (${requestBody.model})`
     };
 
   } catch (err) {
-    console.error("Groq API Call Error:", err);
+    console.error("Perplexity API Call Error:", err);
     const localResult = analyzeVibeLocal(text, activeLang);
     return {
       ...localResult,

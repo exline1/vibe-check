@@ -49,7 +49,7 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey }) {
       <div className="flex justify-center mt-3">
         <span className="flex items-center gap-1.5 px-3 py-1 bg-[#0A0A0A] rounded-full border border-[#1F1F1F] text-[10px] text-zinc-500 font-mono tracking-wide">
           <Sparkles className={`w-3 h-3 ${hasApiKey ? 'text-emerald-400' : 'text-amber-500'}`} />
-          {hasApiKey ? 'Groq Llama-3.3 (Active)' : 'Local Heuristic (Fallback)'}
+          {hasApiKey ? 'Perplexity Sonar-Pro (Active)' : 'Local Heuristic (Fallback)'}
         </span>
       </div>
     </div>
