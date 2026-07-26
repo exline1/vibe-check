@@ -130,9 +130,21 @@ export function speakText(text, lang = 'RU', detectedTone = 'calm', callbacks = 
 
   if (callbacks.onStart) utterance.onstart = callbacks.onStart;
   if (callbacks.onEnd) utterance.onend = callbacks.onEnd;
-  if (callbacks.onError) utterance.onerror = callbacks.onError;
+  utterance.onerror = (e) => {
+    // Ignore normal cancellation/interruption events
+    if (e.error === 'canceled' || e.error === 'interrupted') {
+      if (callbacks.onEnd) callbacks.onEnd();
+      return;
+    }
+    console.warn("SpeechSynthesis warning:", e.error || e);
+    if (callbacks.onError) callbacks.onError(e.error || e);
+  };
 
-  window.speechSynthesis.speak(utterance);
+  try {
+    window.speechSynthesis.speak(utterance);
+  } catch (e) {
+    if (callbacks.onError) callbacks.onError(e);
+  }
   return true;
 }
 

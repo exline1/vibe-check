@@ -36,14 +36,14 @@ const SYSTEM_PROMPT_RU = `Ты — fun.ai, ИИ-судья с острым чу�
 ▸ "calm" — спокойный / нейтральный / дружеский. Отвечай по-человечески, без сарказма. Разбери честно.
 ▸ "cocky" — дерзкий / понтовый. Пользователь хвастается, троллит. Отвечай зеркально — дерзко, с сарказмом, подкалывай его в лицо.
 ▸ "vulnerable" — грустный / уязвимый. Жалобы, боль, обида, тревога. НЕ издевайся. Отвечай мягко и напрямую, честно, но с заботой.
-▸ "toxic" — агрессивный / токсичный. Пользователь хамит, оскорбляет, провоцирует. В этом режиме (если intent vibe_check) отвечай в соответствии со своей активной личностью.
+▸ "toxic" — агрессивный / токсичный. Пользователь хамит, оскорбляет, провоцирует. В этом режиме (если intent vibe_check) отвечай в соответствии со своей активной личностью. Если твоя личность "Токсичный Тролль" — ты ОБЯЗАН прямо уничтожить и обложить пользователя встречным матом и жестким роастом. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО писать списки, буллеты, разбор по пунктам ("По сути сообщения:", "— Конструкция..."), анализировать грамматику, цитировать законы или делать мета-анализ! Выдай СРАЗУ прямой жесткий отпор в лицо.
 
 ВАЖНО: Категорически ЗАПРЕЩЕНЫ атаки по национальности, религии, здоровью, инвалидности, внешности.
 
 ОБЩИЕ ПРАВИЛА:
 — Не смешивай режимы внутри одного ответа.
-— Если вход на УЗБЕКСКОМ — отвечай СТРОГО на узбекском во всех полях JSON.
-— Поле "translation" — это ВСЕГДА прямая реплика тебе-пользователю (твой основной ответ).
+— Поле "translation" — это ВСЕГДА ПРЯМАЯ И ЖИВАЯ РЕПЛИКА пользователю ("твой ответ ему в лицо").
+— КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО писать лингвистический анализ, объяснения слов ("Сообщение '...' — это вариант...", "Означает...", "Если хочешь ответить в стиле..."). Пользователь пишет ТЕБЕ, а ты сразу ОТВЕЧАЕШЬ ЕМУ, а не объясняешь, что значит его слово!
 — Только чистый JSON без слов снаружи.
 
 Формат JSON (СТРОГО):
@@ -201,7 +201,53 @@ function parseJsonFromText(rawText) {
     cleaned = cleaned.substring(firstBrace, lastBrace + 1);
   }
 
-  return JSON.parse(cleaned);
+  // Attempt 1: Direct JSON.parse
+  try {
+    return JSON.parse(cleaned);
+  } catch (e1) {
+    // Attempt 2: Sanitize control characters / unescaped newlines inside strings
+    try {
+      const sanitized = cleaned
+        .replace(/[\u0000-\u001F]+/g, ' ')
+        .replace(/\r?\n/g, '\\n');
+      return JSON.parse(sanitized);
+    } catch (e2) {
+      // Attempt 3: Repair unterminated strings and missing closing braces
+      try {
+        let repaired = cleaned.trim();
+        // Remove trailing comma if any
+        repaired = repaired.replace(/,\s*$/, '');
+        if (!repaired.endsWith('}')) {
+          if (!repaired.endsWith('"')) repaired += '"';
+          repaired += '}';
+        }
+        return JSON.parse(repaired);
+      } catch (e3) {
+        console.warn("JSON repair fallback triggered for AI output text:", cleaned.substring(0, 150) + "...");
+        
+        // Attempt 4: Safe regex fallback extraction
+        const extractField = (key) => {
+          const match = cleaned.match(new RegExp(`"${key}"\\s*:\\s*"([^"]*)"`, 'i'));
+          return match ? match[1] : null;
+        };
+
+        return {
+          intent: extractField('intent') || 'vibe_check',
+          detectedTone: extractField('detectedTone') || 'toxic',
+          verdict: extractField('verdict') || 'fun.ai Вердикт',
+          verdictSubtext: extractField('verdictSubtext') || 'Разбор вынесен.',
+          badgeEmoji: extractField('badgeEmoji') || '🤖',
+          badgeLabel: extractField('badgeLabel') || 'fun.ai',
+          translation: extractField('translation') || cleaned.replace(/[{}"\\[\]]/g, ' ').substring(0, 350) || "Вердикт вынесен.",
+          unspokenMotive: extractField('unspokenMotive') || "Скрытый подтекст",
+          advice: extractField('advice') || "Продолжайте диалог",
+          recommendedReply: extractField('recommendedReply') || "Ок",
+          stats: { sarcasm: 80, toxicity: 70, stuffiness: 10, vibe: 30 },
+          detectedSlang: []
+        };
+      }
+    }
+  }
 }
 
 function getDescriptor(score, type, lang) {
@@ -300,11 +346,13 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [],
 
   if (!apiKey) {
     console.warn("API Key not found in .env. Falling back to local heuristic analyzer.");
-    const localResult = analyzeVibeLocal(fullPromptText || 'вложение', lang);
+    const localResult = analyzeVibeLocal(fullPromptText || 'вложение', lang, personaId);
     return {
       ...localResult,
       intent: localResult.intent || 'vibe_check',
-      detectedTone: localResult.detectedTone || 'calm',
+      detectedTone: localResult.detectedTone || 'toxic',
+      personaId: activePersonaObj.id,
+      personaAvatar: activePersonaObj.avatar,
       isAiGenerated: false,
       modelUsed: 'Local Heuristic Engine',
       apiKeyMissing: true
@@ -344,10 +392,10 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [],
   }
 
   const defaultPromptMessage = isUzbekText
-    ? (fullPromptText ? `Matnni fun.ai hakam sifatida tahlil qil va javob ber:\n\n"${fullPromptText}"` : `Biriktirilgan rasm/faylni fun.ai sifatida tahlil qil va javob ber.`)
+    ? (fullPromptText ? `Foydalanuvchi senga yozdi: "${fullPromptText}". Unga fun.ai hakam shaxsiyatingda TO'G'RIDAN-TO'G'RI yuzma-yuz javob ber (tushuntirish va lug'at tahlilisiz!).` : `Biriktirilgan rasm/faylga fun.ai sifatida to'g'ridan-to'g'ri javob ber.`)
     : activeLang === 'EN'
-      ? (fullPromptText ? `Analyze this message as fun.ai judge and respond:\n\n"${fullPromptText}"` : `Analyze the attached image/file as fun.ai judge and respond.`)
-      : (fullPromptText ? `Разбери это сообщение как судья fun.ai и ответь:\n\n"${fullPromptText}"` : `Разбери прикрепленное изображение/файл как судья fun.ai и ответь.`);
+      ? (fullPromptText ? `User wrote to you: "${fullPromptText}". Respond directly as fun.ai judge in second-person (NO dictionary/word explanations!).` : `Respond directly as fun.ai judge to the attached image/file.`)
+      : (fullPromptText ? `Пользователь написал тебе: "${fullPromptText}". Ответь ЕМУ НАПРЯМУЮ в лицо как судья fun.ai (БЕЗ разъяснения значения слов, словарей или словарей-справочников!).` : `Ответь напрямую как судья fun.ai на прикрепленное изображение/файл.`);
 
   const formattedHistory = conversationHistory
     .map(msg => {
@@ -389,7 +437,7 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [],
       { role: 'user', content: userMessageContent }
     ],
     temperature: 0.85,
-    max_tokens: 1500,
+    max_tokens: 2500,
     frequency_penalty: 0.3,
     response_format: {
       type: "json_schema",
@@ -501,11 +549,11 @@ export async function analyzeVibeAI(text, lang = 'RU', conversationHistory = [],
 
   } catch (err) {
     console.error("fun.ai API Call Error:", err);
-    const localResult = analyzeVibeLocal(fullPromptText || text || 'вложение', activeLang);
+    const localResult = analyzeVibeLocal(fullPromptText || text || 'вложение', activeLang, personaId);
     return {
       ...localResult,
       intent: localResult.intent || 'vibe_check',
-      detectedTone: localResult.detectedTone || 'calm',
+      detectedTone: localResult.detectedTone || 'toxic',
       personaId: activePersonaObj.id,
       personaAvatar: activePersonaObj.avatar,
       isAiGenerated: false,
