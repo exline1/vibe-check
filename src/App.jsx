@@ -7,6 +7,7 @@ import ChatMessages from './components/ChatMessages';
 import HistoryModal from './components/HistoryModal';
 import Toast from './components/Toast';
 import { analyzeVibeAI, getApiKey } from './services/aiService';
+import { speakText, stopSpeech } from './services/speechService';
 import { TRANSLATIONS } from './data/translations';
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
@@ -20,15 +21,21 @@ export default function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMsgId, setSpeakingMsgId] = useState(null);
 
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
   const hasApiKey = !!getApiKey();
 
-  // Load history & language preference from LocalStorage
+  // Load history, lang & TTS preferences from LocalStorage
   useEffect(() => {
     try {
       const savedLang = localStorage.getItem('vibe_check_lang');
       if (savedLang) setLang(savedLang);
+
+      const savedTts = localStorage.getItem('vibe_check_tts');
+      if (savedTts !== null) setTtsEnabled(savedTts === 'true');
 
       const saved = localStorage.getItem('vibe_check_conversations');
       if (saved) {
@@ -48,6 +55,20 @@ export default function App() {
     setLang(nextLang);
     try {
       localStorage.setItem('vibe_check_lang', nextLang);
+    } catch (e) {}
+    playSound('click');
+  };
+
+  const handleToggleTts = () => {
+    const nextTts = !ttsEnabled;
+    setTtsEnabled(nextTts);
+    if (!nextTts) {
+      stopSpeech();
+      setIsSpeaking(false);
+      setSpeakingMsgId(null);
+    }
+    try {
+      localStorage.setItem('vibe_check_tts', String(nextTts));
     } catch (e) {}
     playSound('click');
   };
@@ -83,7 +104,35 @@ export default function App() {
 
   const showToast = (msg) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
+    setTimeout(() => setToastMessage(''), 3500);
+  };
+
+  const handleSpeakBotMsg = (botMsg) => {
+    if (isSpeaking && speakingMsgId === botMsg.id) {
+      stopSpeech();
+      setIsSpeaking(false);
+      setSpeakingMsgId(null);
+      return;
+    }
+
+    const botText = botMsg.text || botMsg.humanTranslation || botMsg.translation || '';
+    stopSpeech();
+
+    speakText(botText, lang, botMsg.detectedTone, {
+      onStart: () => {
+        setIsSpeaking(true);
+        setSpeakingMsgId(botMsg.id);
+      },
+      onEnd: () => {
+        setIsSpeaking(false);
+        setSpeakingMsgId(null);
+      },
+      onError: (err) => {
+        setIsSpeaking(false);
+        setSpeakingMsgId(null);
+        console.warn("TTS Error:", err);
+      }
+    });
   };
 
   const saveConversation = (updatedMessages, currentId) => {
@@ -113,8 +162,14 @@ export default function App() {
   const handleSend = async (payload) => {
     playSound('click');
 
-    // payload can be string (legacy/presets) or object { text, attachments, attachment }
+    // Interrupt any ongoing speech when user sends a new message
+    stopSpeech();
+    setIsSpeaking(false);
+    setSpeakingMsgId(null);
+
     const inputText = typeof payload === 'string' ? payload : (payload.text || '');
+    const isVoice = typeof payload === 'object' ? Boolean(payload.isVoice) : false;
+
     let attachmentsList = [];
     if (typeof payload === 'object') {
       if (Array.isArray(payload.attachments)) {
@@ -137,6 +192,7 @@ export default function App() {
       id: generateId(),
       role: 'user',
       text: inputText,
+      isVoice,
       attachments: processedAttachmentsForMsg.length > 0 ? processedAttachmentsForMsg : null,
       attachment: processedAttachmentsForMsg[0] || null, // legacy fallback
       timestamp: Date.now()
@@ -147,7 +203,6 @@ export default function App() {
     setIsTyping(true);
 
     try {
-      // Get last 8 messages for context
       const conversationHistory = newMessages.slice(-8);
       
       const result = await analyzeVibeAI(inputText, lang, conversationHistory, attachmentsList);
@@ -156,8 +211,8 @@ export default function App() {
         id: generateId(),
         role: 'assistant',
         timestamp: Date.now(),
-        text: result.translation || result.humanTranslation || result.verdict, // fallback
-        ...result // Spread all other analytics
+        text: result.translation || result.humanTranslation || result.verdict,
+        ...result
       };
 
       const finalMessages = [...newMessages, botMsg];
@@ -176,6 +231,9 @@ export default function App() {
 
   const handleNewChat = () => {
     playSound('click');
+    stopSpeech();
+    setIsSpeaking(false);
+    setSpeakingMsgId(null);
     setMessages([]);
     setActiveConversationId(generateId());
   };
@@ -192,6 +250,9 @@ export default function App() {
   };
 
   const handleSelectHistoryItem = (chat) => {
+    stopSpeech();
+    setIsSpeaking(false);
+    setSpeakingMsgId(null);
     setMessages(chat.messages || []);
     setActiveConversationId(chat.id);
   };
@@ -209,6 +270,8 @@ export default function App() {
           }}
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled(!soundEnabled)}
+          ttsEnabled={ttsEnabled}
+          onToggleTts={handleToggleTts}
           lang={lang}
           onToggleLang={handleToggleLang}
           onNewChat={handleNewChat}
@@ -226,6 +289,9 @@ export default function App() {
           messages={messages} 
           isTyping={isTyping} 
           lang={lang} 
+          onSpeakMsg={handleSpeakBotMsg}
+          isSpeaking={isSpeaking}
+          speakingMsgId={speakingMsgId}
         />
 
         {/* Chat Input */}

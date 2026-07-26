@@ -13,7 +13,7 @@ export const TRANSLATIONS = {
     testPresets: "Готовые Пресеты",
     selectPersona: "Выберите пример сообщения",
     inputMessage: "Исходное Сообщение",
-    inputPlaceholder: "Вставьте любое сообщение из Telegram, Slack, почты или мессенджера (например, 'Как я уже писал ранее...', 'это полная база фр фр', 'Ясно.')...",
+    inputPlaceholder: "Вставьте любое сообщение из Telegram, Slack, почты или надиктуйте голосом...",
     chars: "символов",
     clear: "Очистить",
     multiScan: "Многомерный ИИ-скан подтекста",
@@ -53,8 +53,16 @@ export const TRANSLATIONS = {
     hideDetails: "Скрыть аналитику",
     chatHistory: "История диалогов",
     messagesCount: "сообщений",
-    welcomeMessage: "Я Vibe Judge. Отправь мне переписку, и я разнесу её по фактам.",
-    sendMessage: "Отправить сообщение..."
+    welcomeMessage: "Я Vibe Judge. Отправь мне переписку или надиктуй голосом.",
+    sendMessage: "Отправить сообщение...",
+    voiceRecord: "Голосовой ввод",
+    recording: "Запись...",
+    transcribing: "Распознавание речи...",
+    speechError: "Не удалось распознать голос. Попробуйте ещё раз.",
+    micDenied: "Доступ к микрофону отклонён.",
+    ttsActive: "Озвучка ответов ВКЛ",
+    ttsDisabled: "Озвучка ответов ВЫКЛ",
+    voiceMessage: "Голосовое сообщение"
   },
   UZ: {
     appTitle: "Vibe Check",
@@ -69,7 +77,7 @@ export const TRANSLATIONS = {
     testPresets: "Tayyor Namunalar",
     selectPersona: "Namuna xabarni tanlang",
     inputMessage: "Kiritilgan Xabar",
-    inputPlaceholder: "Telegram, Slack, pochta yoki chatdagi istalgan xabarni kiriting (masalan: 'Eson-omonsanmi jigar...', 'chotki krinj fr fr', 'Xo'p.')...",
+    inputPlaceholder: "Telegram, Slack, pochta chatidagi xabarni kiriting yoki ovozli aiting...",
     chars: "belgi",
     clear: "Tozalash",
     multiScan: "Ko'p o'lchamli AI Vayb Skaneri",
@@ -109,8 +117,16 @@ export const TRANSLATIONS = {
     hideDetails: "Tahlilni yashirish",
     chatHistory: "Suhbatlar tarixi",
     messagesCount: "xabar",
-    welcomeMessage: "Men Vibe Judge. Menga yozishmalarni yubor, men haqiqatni aytaman.",
-    sendMessage: "Xabar yuborish..."
+    welcomeMessage: "Men Vibe Judge. Menga yozishmalarni yubor yoki ovozli gapir.",
+    sendMessage: "Xabar yuborish...",
+    voiceRecord: "Ovozli kiritish",
+    recording: "Ovoz yozilmoqda...",
+    transcribing: "Ovoz aniqlanmoqda...",
+    speechError: "Ovozni aniqlab bo'lmadi. Qayta urinib ko'ring.",
+    micDenied: "Mikrofonga ruxsat berilmadi.",
+    ttsActive: "Javoblar ovozi YOQILGAN",
+    ttsDisabled: "Javoblar ovozi O'CHIRILGAN",
+    voiceMessage: "Ovozli xabar"
   },
   EN: {
     appTitle: "Vibe Check",
@@ -125,7 +141,7 @@ export const TRANSLATIONS = {
     testPresets: "Test Presets",
     selectPersona: "Select sample persona",
     inputMessage: "Input Message",
-    inputPlaceholder: "Paste any Slack snippet, DM, email, or text message here (e.g. 'Per my previous email...', 'no cap fr fr', 'K.')...",
+    inputPlaceholder: "Paste any Slack snippet, DM, or dictate with your voice...",
     chars: "chars",
     clear: "Clear",
     multiScan: "Multi-dimensional AI Nuance Scan",
@@ -165,7 +181,15 @@ export const TRANSLATIONS = {
     hideDetails: "Hide Analytics",
     chatHistory: "Chat History",
     messagesCount: "messages",
-    welcomeMessage: "I'm Vibe Judge. Send me a message, and I'll break down the real subtext.",
-    sendMessage: "Send a message..."
+    welcomeMessage: "I'm Vibe Judge. Send me a message or dictate with your voice.",
+    sendMessage: "Send a message...",
+    voiceRecord: "Voice Input",
+    recording: "Recording...",
+    transcribing: "Transcribing speech...",
+    speechError: "Failed to recognize speech. Please try again.",
+    micDenied: "Microphone access denied.",
+    ttsActive: "Voice Readout ON",
+    ttsDisabled: "Voice Readout OFF",
+    voiceMessage: "Voice message"
   }
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TRANSLATIONS } from '../data/translations';
-import { Bot, User, ChevronDown, ChevronUp, Zap, Info, ShieldAlert, BookOpen, Skull, Flame, FileText, AlertTriangle, Film } from 'lucide-react';
+import { Bot, User, ChevronDown, ChevronUp, Zap, Info, ShieldAlert, BookOpen, Skull, Flame, FileText, AlertTriangle, Film, Mic, Volume2, VolumeX, Square } from 'lucide-react';
 
 const TONE_STYLES = {
   calm: { bg: 'bg-zinc-500/10', border: 'border-zinc-500/30', text: 'text-zinc-300', accent: 'text-zinc-400' },
@@ -23,16 +23,17 @@ const GaugeItem = ({ label, score, descriptor, colorClass }) => (
   </div>
 );
 
-function BotMessage({ msg, lang }) {
+function BotMessage({ msg, lang, onSpeakMsg, isSpeaking, speakingMsgId }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
   const [showDetails, setShowDetails] = useState(false);
   
   const toneStyle = msg.intent === 'help' ? TONE_STYLES.help : (TONE_STYLES[msg.detectedTone] || TONE_STYLES.calm);
+  const isThisMsgSpeaking = isSpeaking && speakingMsgId === msg.id;
 
   return (
     <div className="flex gap-3 mb-6 w-full group">
-      <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center flex-shrink-0 mt-1">
-        <Bot className={`w-4 h-4 ${toneStyle.accent}`} />
+      <div className={`w-8 h-8 rounded-full bg-zinc-900 border ${isThisMsgSpeaking ? 'border-emerald-500 ring-2 ring-emerald-500/40 animate-pulse' : 'border-zinc-700'} flex items-center justify-center flex-shrink-0 mt-1 transition-all`}>
+        <Bot className={`w-4 h-4 ${isThisMsgSpeaking ? 'text-emerald-400' : toneStyle.accent}`} />
       </div>
       
       <div className="flex flex-col gap-1 max-w-[92%] md:max-w-[85%]">
@@ -50,14 +51,36 @@ function BotMessage({ msg, lang }) {
           {msg.text}
         </div>
 
-        {/* Analytics Toggle */}
-        <button 
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-xs flex items-center gap-1 text-zinc-500 hover:text-zinc-300 transition-colors mt-1 self-start cursor-pointer"
-        >
-          {showDetails ? <ChevronUp className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>}
-          {showDetails ? (t.hideDetails || "Hide Analytics") : (t.showDetails || "Show Analytics")}
-        </button>
+        {/* Controls: Analytics Toggle & Audio Readout Button */}
+        <div className="flex items-center gap-4 mt-1 self-start">
+          <button 
+            onClick={() => setShowDetails(!showDetails)}
+            className="text-xs flex items-center gap-1 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+          >
+            {showDetails ? <ChevronUp className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>}
+            {showDetails ? (t.hideDetails || "Hide Analytics") : (t.showDetails || "Show Analytics")}
+          </button>
+
+          {onSpeakMsg && (
+            <button
+              onClick={() => onSpeakMsg(msg)}
+              className={`text-xs flex items-center gap-1 transition-colors cursor-pointer font-mono ${isThisMsgSpeaking ? 'text-emerald-400 font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+              title={isThisMsgSpeaking ? "Остановить озвучку" : "Прослушать ответ"}
+            >
+              {isThisMsgSpeaking ? (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />
+                  <span>Озвучка...</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3.5 h-3.5" />
+                  <span>Озвучить</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
 
         {/* Details Drawer */}
         {showDetails && msg.gauges && (
@@ -116,7 +139,6 @@ function BotMessage({ msg, lang }) {
 }
 
 function UserMessage({ msg }) {
-  // Support array msg.attachments or legacy single msg.attachment
   const attachmentList = Array.isArray(msg.attachments)
     ? msg.attachments
     : (msg.attachment ? [msg.attachment] : []);
@@ -125,6 +147,11 @@ function UserMessage({ msg }) {
     <div className="flex justify-end gap-3 mb-6 w-full">
       <div className="flex flex-col gap-1 max-w-[90%] md:max-w-[80%] items-end">
         <div className="flex items-center gap-2">
+          {msg.isVoice && (
+            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-[9px] font-mono text-emerald-400">
+              <Mic className="w-3 h-3" /> Голос
+            </span>
+          )}
           <span className="text-[10px] text-zinc-600 font-mono">{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
           <span className="text-xs font-bold text-zinc-400">You</span>
         </div>
@@ -136,7 +163,6 @@ function UserMessage({ msg }) {
             <div className="flex flex-wrap gap-2 mb-3">
               {attachmentList.map((att, idx) => (
                 <div key={idx} className="flex flex-col">
-                  {/* Single Image */}
                   {att.type === 'image' && (att.thumbnail || att.images?.[0]) && (
                     <img
                       src={att.thumbnail || att.images[0]}
@@ -145,7 +171,6 @@ function UserMessage({ msg }) {
                     />
                   )}
 
-                  {/* Video with Frame Thumbnails & Warning */}
                   {att.type === 'video' && (
                     <div className="flex flex-col gap-1.5">
                       <div className="grid grid-cols-2 gap-1.5 max-w-xs">
@@ -165,7 +190,6 @@ function UserMessage({ msg }) {
                     </div>
                   )}
 
-                  {/* Text/PDF File Card */}
                   {(att.type === 'text' || att.type === 'pdf') && (
                     <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-zinc-900 border border-zinc-700 text-xs">
                       <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
@@ -190,7 +214,7 @@ function UserMessage({ msg }) {
   );
 }
 
-export default function ChatMessages({ messages, isTyping, lang }) {
+export default function ChatMessages({ messages, isTyping, lang, onSpeakMsg, isSpeaking, speakingMsgId }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
   const bottomRef = useRef(null);
 
@@ -216,7 +240,14 @@ export default function ChatMessages({ messages, isTyping, lang }) {
             msg.role === 'user' ? (
               <UserMessage key={msg.id} msg={msg} />
             ) : (
-              <BotMessage key={msg.id} msg={msg} lang={lang} />
+              <BotMessage 
+                key={msg.id} 
+                msg={msg} 
+                lang={lang} 
+                onSpeakMsg={onSpeakMsg}
+                isSpeaking={isSpeaking}
+                speakingMsgId={speakingMsgId}
+              />
             )
           )}
           

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Zap, History, Volume2, VolumeX, Globe, Plus } from 'lucide-react';
+import { Zap, History, Volume2, VolumeX, Globe, Plus, MessageSquare, Mic } from 'lucide-react';
 import { TRANSLATIONS } from '../data/translations';
 
-export default function Navbar({ historyCount, onOpenHistory, soundEnabled, onToggleSound, lang, onToggleLang, onNewChat }) {
+export default function Navbar({ historyCount, onOpenHistory, soundEnabled, onToggleSound, ttsEnabled, onToggleTts, lang, onToggleLang, onNewChat }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
 
   return (
@@ -49,10 +49,10 @@ export default function Navbar({ historyCount, onOpenHistory, soundEnabled, onTo
           <span className={lang === 'EN' ? 'text-white font-extrabold' : 'text-zinc-500'}>EN</span>
         </button>
 
-        {/* Sound Toggle */}
+        {/* Sound FX Toggle */}
         <button
           onClick={onToggleSound}
-          title={soundEnabled ? "Выключить звук" : "Включить звук"}
+          title={soundEnabled ? "Звуковые эффекты ВКЛ" : "Звуковые эффекты ВЫКЛ"}
           className="p-2.5 rounded-2xl bg-[#0A0A0A] hover:bg-[#111111] border border-[#1F1F1F] text-zinc-400 hover:text-white transition-all text-xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
         >
           {soundEnabled ? <Volume2 className="w-4 h-4 text-white" /> : <VolumeX className="w-4 h-4 text-zinc-600" />}
