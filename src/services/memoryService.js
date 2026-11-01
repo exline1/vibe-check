@@ -4,7 +4,7 @@
  */
 
 const MEMORY_STORAGE_KEY = 'fun_ai_user_memory';
-const PERPLEXITY_API_URL = 'https://api.perplexity.ai/chat/completions';
+const PROXY_CHAT_URL = '/api/chat';
 
 /**
  * Gets accumulated memory facts about the user
@@ -54,15 +54,14 @@ export function clearUserMemory() {
 /**
  * Summarizes key user facts from conversation history using Perplexity API
  */
-export async function summarizeAndStoreMemory(conversationHistory, apiKey) {
-  if (!apiKey || !conversationHistory || conversationHistory.length < 3) return;
+export async function summarizeAndStoreMemory(conversationHistory) {
+  if (!conversationHistory || conversationHistory.length < 3) return;
 
   const textTranscript = conversationHistory
     .map(m => `${m.role === 'user' ? 'Пользователь' : 'fun.ai'}: ${m.text || m.translation || ''}`)
     .join('\n');
 
   const requestBody = {
-    model: 'sonar',
     messages: [
       {
         role: 'system',
@@ -78,10 +77,9 @@ export async function summarizeAndStoreMemory(conversationHistory, apiKey) {
   };
 
   try {
-    const res = await fetch(PERPLEXITY_API_URL, {
+    const res = await fetch(PROXY_CHAT_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestBody)

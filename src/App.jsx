@@ -230,7 +230,7 @@ export default function App() {
       saveConversation(finalMessages, activeConversationId);
 
       // Async trigger long-term memory summarization in background
-      summarizeAndStoreMemory(finalMessages, apiKey);
+      summarizeAndStoreMemory(finalMessages);
 
     } catch (err) {
       console.error("fun.ai analysis error:", err);

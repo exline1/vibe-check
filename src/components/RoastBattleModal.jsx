@@ -52,11 +52,17 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
     setRoomCode(newCode);
     setPlayerRole('player1');
     setIsInRoom(true);
+    const createdMsg = lang === 'UZ'
+      ? `${newCode} xonasi yaratildi! Havolani nusxalang va Raqibga (2-o'yinchi) yuboring.`
+      : lang === 'EN'
+        ? `Room ${newCode} created! Copy the link and invite Opponent (Player 2).`
+        : `Комната ${newCode} создана! Скопируйте ссылку и отправьте Сопернику (Игрок 2).`;
+
     setBattleMessages([
       {
         id: 'sys-1',
         sender: 'system',
-        text: `Комната ${newCode} создана! Скопируйте ссылку и отправьте Сопернику (Игрок 2).`
+        text: createdMsg
       }
     ]);
   };
@@ -66,13 +72,19 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
     const cleanCode = inputCode.trim().toUpperCase();
     setRoomCode(cleanCode);
     setPlayerRole('player2');
-    setPlayerName('Player 2');
+    setPlayerName(lang === 'UZ' ? "2-O'yinchi" : lang === 'EN' ? 'Player 2' : 'Игрок 2');
     setIsInRoom(true);
+    const joinedMsg = lang === 'UZ'
+      ? `${cleanCode} dueliga 2-o'yinchi sifatida qo'shildingiz!`
+      : lang === 'EN'
+        ? `You joined battle ${cleanCode} as Player 2!`
+        : `Вы присоединились к дуэли ${cleanCode} как Игрок 2!`;
+
     setBattleMessages([
       {
         id: 'sys-2',
         sender: 'system',
-        text: `Вы присоединились к дуэли ${cleanCode} как Игрок 2!`
+        text: joinedMsg
       }
     ]);
   };
@@ -108,7 +120,11 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
     setIsJudging(true);
     try {
       const historyContext = [...battleMessages, newMsg].slice(-6);
-      const battlePrompt = `[ROAST BATTLE: ${playerName} (${playerRole}) только что написал: "${msgText}"]. Оцени реплику, сравни с соперником, жестко зажарь и объяви счет этого раунда.`;
+      const battlePrompt = lang === 'UZ'
+        ? `[ROAST BATTLE: ${playerName} (${playerRole}) hozirgina yozdi: "${msgText}"]. Ushbu gapni bahola, raqibi bilan solishtir, shafqatsiz roast qil va ushbu raund hisobini e'lon qil.`
+        : lang === 'EN'
+          ? `[ROAST BATTLE: ${playerName} (${playerRole}) just wrote: "${msgText}"]. Evaluate this comeback, compare against opponent, roast savagely, and declare the score for this round.`
+          : `[ROAST BATTLE: ${playerName} (${playerRole}) только что написал: "${msgText}"]. Оцени реплику, сравни с соперником, жестко зажарь и объяви счет этого раунда.`;
 
       const aiResult = await analyzeVibeAI(battlePrompt, lang, historyContext, null, activePersonaId);
 

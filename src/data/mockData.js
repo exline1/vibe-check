@@ -142,7 +142,7 @@ export function analyzeVibe(inputText, lang = 'RU', personaId = 'troll') {
     toxicityScore = 75;
     stuffinessScore = 5;
     overallVibeScore = 15;
-    detectedTerms.push({ term: text, nuance: lang === 'UZ' ? "Bitta so'zli quruq javob." : "Односложная отповедь." });
+    detectedTerms.push({ term: text, nuance: lang === 'UZ' ? "Bitta so'zli quruq javob." : lang === 'EN' ? "One-word dismissive reply." : "Односложная отповедь." });
   }
 
   // Punctuation
@@ -150,7 +150,7 @@ export function analyzeVibe(inputText, lang = 'RU', personaId = 'troll') {
     sarcasmScore += 10;
     toxicityScore += 10;
     overallVibeScore -= 10;
-    detectedTerms.push({ term: "...", nuance: lang === 'UZ' ? "Ko'p nuqta bilan aytilmagan gap." : "Многоточие с подтекстом недосказанности." });
+    detectedTerms.push({ term: "...", nuance: lang === 'UZ' ? "Ko'p nuqta bilan aytilmagan gap." : lang === 'EN' ? "Ellipsis implying unsaid passive-aggressive subtext." : "Многоточие с подтекстом недосказанности." });
   }
 
   sarcasmScore = Math.min(100, Math.max(0, sarcasmScore));
@@ -163,21 +163,22 @@ export function analyzeVibe(inputText, lang = 'RU', personaId = 'troll') {
   
   const personaFallbackText = FALLBACK_RESPONSES[personaKey][activeLang] || FALLBACK_RESPONSES.troll.RU;
 
-  let verdict = activeLang === 'UZ' ? "fun.ai Hukmi (Limiting/Fallback)" : activeLang === 'EN' ? "fun.ai Verdict (Fallback)" : "fun.ai Вердикт (Лимит/Фоллбэк)";
-  let verdictSubtext = activeLang === 'UZ' ? "Сервер паузада" : "Сервер временно занят";
+  let verdict = activeLang === 'UZ' ? "fun.ai O'tkir Hukmi (Zaxira)" : activeLang === 'EN' ? "fun.ai Verdict (Fallback)" : "fun.ai Вердикт (Лимит/Фоллбэк)";
+  let verdictSubtext = activeLang === 'UZ' ? "Server vaqtincha band" : activeLang === 'EN' ? "Server temporarily busy" : "Сервер временно занят";
   let badgeEmoji = personaKey === 'troll' ? '😈' : personaKey === 'therapist' ? '🧠' : personaKey === 'flexer' ? '👑' : '🕯️';
   let badgeLabel = "fun.ai";
 
   const getDescriptor = (score, type) => {
     if (activeLang === 'UZ') {
-      if (type === 'vibe') return score >= 80 ? "Super Vayb" : score >= 50 ? "O'rtacha" : "Muzdek Vayb";
-      return score >= 80 ? "Maksimal" : score >= 50 ? "Yuqori" : "Past";
+      if (type === 'vibe') return score >= 80 ? "A'lo Vayb (Cho'qqida)" : score >= 50 ? "Ijobiy Vayb (Norma)" : "Minus Vayb (Kayfiyat Nol)";
+      return score >= 80 ? "Ekstremal Daraja" : score >= 50 ? "Yuqori Daraja" : "Past Daraja";
     }
     if (activeLang === 'RU') {
       if (type === 'vibe') return score >= 80 ? "Идеальный Кайф" : score >= 50 ? "Хороший Вайб" : "Минус по Вайбу";
       return score >= 80 ? "Экстремальный" : score >= 50 ? "Высокий" : "Низкий";
     }
-    return score >= 80 ? "Extreme" : "Moderate";
+    if (type === 'vibe') return score >= 80 ? "Immaculate Chill" : score >= 50 ? "Decent Energy" : "Sub-Zero Vibe";
+    return score >= 80 ? "Extreme" : score >= 50 ? "Elevated" : "Low";
   };
 
   return {
@@ -199,11 +200,11 @@ export function analyzeVibe(inputText, lang = 'RU', personaId = 'troll') {
       overallVibe: getDescriptor(overallVibeScore, 'vibe')
     },
     humanTranslation: personaFallbackText,
-    unspokenMotive: activeLang === 'UZ' ? "Сервер паузада или лимит" : activeLang === 'EN' ? "Rate limit or busy server" : "Пауза сервера или лимит запросов",
-    proTip: activeLang === 'UZ' ? "Попробуй через 10 секунд" : activeLang === 'EN' ? "Try again in 10 seconds" : "Попробуйте повторить через 10 секунд",
-    recommendedReply: activeLang === 'UZ' ? "Жду" : activeLang === 'EN' ? "Waiting" : "Жду",
+    unspokenMotive: activeLang === 'UZ' ? "Server band yoki so'rovlar limiti" : activeLang === 'EN' ? "Rate limit reached or server busy" : "Пауза сервера или лимит запросов",
+    proTip: activeLang === 'UZ' ? "10 soniyadan so'ng qayta urinib ko'ring" : activeLang === 'EN' ? "Try again in 10 seconds" : "Попробуйте повторить через 10 секунд",
+    recommendedReply: activeLang === 'UZ' ? "Kutyapman" : activeLang === 'EN' ? "Waiting" : "Жду",
     detectedTerms: detectedTerms.length > 0 ? detectedTerms : [
-      { term: text.substring(0, 15), nuance: "Фоллбэк режим" }
+      { term: text.substring(0, 15), nuance: activeLang === 'UZ' ? "Zaxira rejimi" : activeLang === 'EN' ? "Fallback mode" : "Фоллбэк режим" }
     ],
     rawInput: text,
     detectedTone: personaKey === 'troll' ? 'toxic' : personaKey === 'therapist' ? 'calm' : personaKey === 'flexer' ? 'cocky' : 'vulnerable'

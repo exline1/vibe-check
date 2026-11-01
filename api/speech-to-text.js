@@ -64,7 +64,7 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: { message: 'Too many voice requests. Please wait a minute.' } });
   }
 
-  const apiKey = process.env.GROQ_API_KEY || process.env.PERPLEXITY_API_KEY || process.env.VITE_GROQ_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
 
   if (!apiKey) {
     return res.status(500).json({ error: { message: 'Server Speech API key missing' } });
