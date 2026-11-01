@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
 import Header from './components/Header';
 import ChatInput from './components/ChatInput';
@@ -9,6 +9,7 @@ import MemoryModal from './components/MemoryModal';
 import RoastBattleModal from './components/RoastBattleModal';
 import DisclaimerModal from './components/DisclaimerModal';
 import Toast from './components/Toast';
+import { UploadCloud, Zap } from 'lucide-react';
 import { analyzeVibeAI, getApiKey } from './services/aiService';
 import { speakText, stopSpeech } from './services/speechService';
 import { summarizeAndStoreMemory } from './services/memoryService';
@@ -37,9 +38,68 @@ export default function App() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState(null);
 
+  // File drag & drop state
+  const [isDraggingFiles, setIsDraggingFiles] = useState(false);
+  const [incomingFiles, setIncomingFiles] = useState(null);
+  const dragCounterRef = useRef(0);
+
+  const isAnyModalOpen = isHistoryOpen || isMemoryOpen || isBattleOpen || isDisclaimerOpen;
+
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
   const apiKey = getApiKey();
   const hasApiKey = !!apiKey;
+
+  // Global window drag and drop listener
+  useEffect(() => {
+    const handleDragEnter = (e) => {
+      if (isAnyModalOpen) return;
+      if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+        e.preventDefault();
+        dragCounterRef.current += 1;
+        setIsDraggingFiles(true);
+      }
+    };
+
+    const handleDragOver = (e) => {
+      if (isAnyModalOpen) return;
+      if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        setIsDraggingFiles(true);
+      }
+    };
+
+    const handleDragLeave = (e) => {
+      e.preventDefault();
+      dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
+      if (dragCounterRef.current === 0) {
+        setIsDraggingFiles(false);
+      }
+    };
+
+    const handleDrop = (e) => {
+      e.preventDefault();
+      dragCounterRef.current = 0;
+      setIsDraggingFiles(false);
+      if (isAnyModalOpen) return;
+
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        setIncomingFiles(Array.from(e.dataTransfer.files));
+      }
+    };
+
+    window.addEventListener('dragenter', handleDragEnter);
+    window.addEventListener('dragover', handleDragOver);
+    window.addEventListener('dragleave', handleDragLeave);
+    window.addEventListener('drop', handleDrop);
+
+    return () => {
+      window.removeEventListener('dragenter', handleDragEnter);
+      window.removeEventListener('dragover', handleDragOver);
+      window.removeEventListener('dragleave', handleDragLeave);
+      window.removeEventListener('drop', handleDrop);
+    };
+  }, [isAnyModalOpen]);
 
   // Load history, lang & persona preferences from LocalStorage
   useEffect(() => {
@@ -332,6 +392,8 @@ export default function App() {
             disabled={isTyping}
             hasApiKey={hasApiKey}
             onError={showToast}
+            incomingFiles={incomingFiles}
+            onClearIncomingFiles={() => setIncomingFiles(null)}
           />
         </div>
 
@@ -372,6 +434,51 @@ export default function App() {
 
       {/* Floating Notification Toast */}
       <Toast message={toastMessage} />
+
+      {/* Full-Screen Drag & Drop Overlay */}
+      {isDraggingFiles && (
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
+            if (dragCounterRef.current === 0) {
+              setIsDraggingFiles(false);
+            }
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            dragCounterRef.current = 0;
+            setIsDraggingFiles(false);
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              setIncomingFiles(Array.from(e.dataTransfer.files));
+            }
+          }}
+          className="fixed inset-0 z-50 bg-[#0E0D12]/80 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in fade-in duration-200"
+        >
+          <div className="w-full max-w-md p-8 md:p-12 rounded-[40px] bg-[#16151D]/95 border-2 border-dashed border-[#00D2D3] flex flex-col items-center text-center shadow-2xl ring-4 ring-[#00D2D3]/20 pointer-events-none transform scale-100 transition-all">
+            <div className="w-20 h-20 rounded-full bg-[#00D2D3]/15 border border-[#00D2D3]/40 flex items-center justify-center mb-5 text-[#00D2D3] animate-bounce">
+              <UploadCloud className="w-10 h-10" />
+            </div>
+
+            <h3 className="text-xl md:text-2xl font-bold text-[#F2EFE9] mb-2 font-stage">
+              {t.dropFilesHere || "Перетащите файлы сюда"}
+            </h3>
+
+            <p className="text-xs md:text-sm text-[#9E9AA8] max-w-xs mb-4">
+              {t.dropFilesSub || "Фото, видео, PDF и текст (до 4 файлов) прикрепятся мгновенно"}
+            </p>
+
+            <div className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#0E0D12] border border-[#2A2838] text-[11px] font-mono text-[#00D2D3]">
+              <Zap className="w-3.5 h-3.5 fill-[#00D2D3]" />
+              <span>{t.fastOptimizationBadge || "Мгновенная оптимизация"}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

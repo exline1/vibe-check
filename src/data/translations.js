@@ -64,6 +64,15 @@ export const TRANSLATIONS = {
     ttsDisabled: "Озвучка ответов ВЫКЛ",
     voiceMessage: "Голосовое сообщение",
 
+    // File Drag & Drop, Paste & Fast Upload
+    dropFilesHere: "Перетащите файлы сюда",
+    dropFilesSub: "Фото, видео, PDF и текст (до 4 файлов) прикрепятся мгновенно",
+    pastedImage: "Изображение прикреплено из буфера (Ctrl+V)",
+    optimizingFiles: "Оптимизация и сжатие файлов...",
+    maxAttachmentsError: "Максимум 4 вложения в одном сообщении",
+    dragOrPasteHint: "Перетащите файлы или вставьте скриншот (Ctrl+V)",
+    fastOptimizationBadge: "Мгновенная оптимизация",
+
     // Personas System
     choosePersona: "Выберите Личность Судьи",
     personaTroll: "Токсичный Тролль",
@@ -173,6 +182,15 @@ export const TRANSLATIONS = {
     ttsDisabled: "Javoblar ovozi O'CHIRILGAN",
     voiceMessage: "Ovozli xabar",
 
+    // File Drag & Drop, Paste & Fast Upload
+    dropFilesHere: "Fayllarni bu yerga tashlang",
+    dropFilesSub: "Rasm, video, PDF va matn (4 tagacha) bir zumda biriktiriladi",
+    pastedImage: "Rasm xotiradan biriktirildi (Ctrl+V)",
+    optimizingFiles: "Fayllar tezkor optimallashtirilmoqda...",
+    maxAttachmentsError: "Bitta xabarda ko'pi bilan 4 ta fayl",
+    dragOrPasteHint: "Fayllarni tashlang yoki skrinshotni qo'ying (Ctrl+V)",
+    fastOptimizationBadge: "Tezkor optimallashtirish",
+
     // Personas System
     choosePersona: "Hakam Shaxsiyatini Tanlang",
     personaTroll: "Toksik Troll",
@@ -281,6 +299,15 @@ export const TRANSLATIONS = {
     ttsActive: "Voice Readout ON",
     ttsDisabled: "Voice Readout OFF",
     voiceMessage: "Voice message",
+
+    // File Drag & Drop, Paste & Fast Upload
+    dropFilesHere: "Drop files here to attach",
+    dropFilesSub: "Images, videos, PDFs and text (up to 4 files) attached instantly",
+    pastedImage: "Image attached from clipboard (Ctrl+V)",
+    optimizingFiles: "Optimizing & compressing files...",
+    maxAttachmentsError: "Maximum 4 attachments per message",
+    dragOrPasteHint: "Drag & drop files or paste screenshot (Ctrl+V)",
+    fastOptimizationBadge: "Instant Optimization",
 
     // Personas System
     choosePersona: "Choose Judge Persona",

@@ -5,8 +5,6 @@ import { generateRoomCode, subscribeToBattleRoom, broadcastBattleEvent } from '.
 import { analyzeVibeAI } from '../services/aiService';
 
 export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaId }) {
-  if (!isOpen) return null;
-
   const t = TRANSLATIONS[lang] || TRANSLATIONS.RU;
   const [roomCode, setRoomCode] = useState('');
   const [playerName, setPlayerName] = useState('Player 1');
@@ -173,6 +171,8 @@ export default function RoastBattleModal({ isOpen, onClose, lang, activePersonaI
       type: 'BATTLE_FINISHED'
     });
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
