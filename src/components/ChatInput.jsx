@@ -400,7 +400,7 @@ export default function ChatInput({
                 onClick={handleFileClick}
                 disabled={disabled || isProcessingFile || isTranscribing || attachments.length >= 4}
                 className="flex-shrink-0 w-9 h-9 rounded-full bg-[#0E0D12] hover:bg-[#1E1C27] text-[#9E9AA8] hover:text-[#F2EFE9] disabled:opacity-40 transition-all flex items-center justify-center cursor-pointer border border-[#2A2838]"
-                title="Прикрепить фото, видео, PDF или текст (перетащите файлы или Ctrl+V)"
+                title="Прикрепить фото, PDF, txt или видео"
               >
                 <Paperclip className="w-4 h-4" />
               </button>
@@ -447,18 +447,11 @@ export default function ChatInput({
         </div>
       </form>
 
-      {/* Footer Info & Drag/Paste Hint */}
+      {/* Footer Info */}
       <div className="flex flex-col items-center gap-1 mt-2">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-0.5 bg-[#16151D] rounded-full border border-[#2A2838] text-[10px] text-[#9E9AA8] font-mono">
-            <Gavel className="w-3 h-3 text-[#FF3B30]" />
-            <span>fun.ai Engine</span>
-          </div>
-
-          <div className="hidden sm:flex items-center gap-1 text-[10px] text-[#9E9AA8] font-mono px-2 py-0.5 rounded-full bg-[#0E0D12] border border-[#2A2838]/60">
-            <Zap className="w-2.5 h-2.5 text-[#00D2D3]" />
-            <span>{t.dragOrPasteHint || "Перетащите файлы или Ctrl+V"}</span>
-          </div>
+        <div className="flex items-center gap-1.5 px-3 py-0.5 bg-[#16151D] rounded-full border border-[#2A2838] text-[10px] text-[#9E9AA8] font-mono">
+          <Gavel className="w-3 h-3 text-[#FF3B30]" />
+          <span>fun.ai Engine</span>
         </div>
 
         <p className="text-[10px] text-[#9E9AA8] text-center font-normal">
