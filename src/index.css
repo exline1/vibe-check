@@ -1,56 +1,88 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..800;1,9..40,400..800&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
+
+:root {
+  --color-stage-ink: #0E0D12;
+  --color-bench: #16151D;
+  --color-bench-hover: #1E1C27;
+  --color-bench-border: #2A2838;
+  --color-spotlight-paper: #F2EFE9;
+  --color-muted: #9E9AA8;
+
+  /* Persona & Tone Accent Variables */
+  --color-toxic: #FF3B30;
+  --color-therapist: #00D2D3;
+  --color-flexer: #FFB800;
+  --color-philosopher: #A55EEA;
+}
 
 @layer base {
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    scrollbar-color: #2A2838 #0E0D12;
   }
 
   html, body, button, input, textarea, select {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   }
 
   body {
-    background-color: #08080c;
-    color: #f4f4f5;
+    background-color: var(--color-stage-ink);
+    color: var(--color-spotlight-paper);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
-  h1, h2, h3, h4, h5, h6, .font-heading {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+
+  h1, h2, h3, h4, h5, h6, .font-heading, .font-stage {
+    font-family: 'Space Grotesk', -apple-system, sans-serif !important;
     letter-spacing: -0.02em;
   }
 
   code, pre, .font-mono {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace !important;
+    font-family: 'Space Mono', ui-monospace, SFMono-Regular, monospace !important;
+  }
+
+  /* Accessibility Focus Rings */
+  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--color-spotlight-paper);
+    outline-offset: 2px;
+  }
+}
+
+/* Reduced Motion Respect */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
 /* Custom Scrollbar for Webkit Browsers */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #0E0D12;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
+  background: #2A2838;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: #3D3A50;
 }
 
-/* Linear Glassmorphism Ambient Glow */
-.bg-radial-gradient {
-  background: 
-    radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
-    radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.04) 0%, transparent 50%),
-    #08080c;
+/* Stage Arena Background Grid Texture (No glowing neon radial gradients) */
+.bg-stage-arena {
+  background-color: #0E0D12;
+  background-image: 
+    linear-gradient(to right, rgba(42, 40, 56, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(42, 40, 56, 0.15) 1px, transparent 1px);
+  background-size: 32px 32px;
 }

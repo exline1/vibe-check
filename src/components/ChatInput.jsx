@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, Paperclip, X, FileText, Mic, Square, Loader2, Image as ImageIcon, Film } from 'lucide-react';
+import { Send, Gavel, Paperclip, X, FileText, Mic, Square, Loader2, Image as ImageIcon, Film } from 'lucide-react';
 import { TRANSLATIONS } from '../data/translations';
 import { processAttachment } from '../services/fileProcessing';
 import { transcribeAudioGroq } from '../services/speechService';
@@ -177,30 +177,30 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
       />
 
       <form onSubmit={handleSubmit} className="relative">
-        <div className="relative flex flex-col bg-[#0d0d14]/80 backdrop-blur-xl border border-white/[0.1] rounded-[50px] px-3 py-2 focus-within:border-indigo-500/50 focus-within:shadow-[0_0_20px_rgba(99,102,241,0.15)] transition-all shadow-xl">
+        <div className="relative flex flex-col bg-[#16151D] border border-[#2A2838] rounded-[50px] px-3.5 py-2 focus-within:border-[#F2EFE9]/40 transition-all shadow-md">
           
           {/* Attachments Preview Bar */}
           {attachments.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 mx-3 mt-1 mb-2 p-2 rounded-[30px] bg-white/[0.04] border border-white/[0.08]">
+            <div className="flex flex-wrap items-center gap-2 mx-3 mt-1 mb-2 p-2 rounded-[30px] bg-[#0E0D12] border border-[#2A2838]">
               {attachments.map((att, idx) => (
-                <div key={idx} className="flex items-center gap-2 p-1.5 pr-2.5 rounded-full bg-white/[0.06] border border-white/[0.1] relative">
+                <div key={idx} className="flex items-center gap-2 p-1.5 pr-2.5 rounded-full bg-[#16151D] border border-[#2A2838] relative">
                   {att.thumbnail ? (
                     <img
                       src={att.thumbnail}
                       alt={att.fileName}
-                      className="w-7 h-7 object-cover rounded-full border border-white/[0.1] flex-shrink-0"
+                      className="w-7 h-7 object-cover rounded-full border border-[#2A2838] flex-shrink-0"
                     />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-white/[0.08] border border-white/[0.1] flex items-center justify-center flex-shrink-0 text-zinc-400">
-                      {att.type === 'video' ? <Film className="w-3.5 h-3.5 text-zinc-400" /> : att.type === 'image' ? <ImageIcon className="w-3.5 h-3.5 text-zinc-400" /> : <FileText className="w-3.5 h-3.5 text-zinc-400" />}
+                    <div className="w-7 h-7 rounded-full bg-[#0E0D12] border border-[#2A2838] flex items-center justify-center flex-shrink-0 text-[#9E9AA8]">
+                      {att.type === 'video' ? <Film className="w-3.5 h-3.5 text-[#9E9AA8]" /> : att.type === 'image' ? <ImageIcon className="w-3.5 h-3.5 text-[#9E9AA8]" /> : <FileText className="w-3.5 h-3.5 text-[#9E9AA8]" />}
                     </div>
                   )}
 
                   <div className="flex flex-col min-w-0 pr-1">
-                    <span className="text-[11px] font-medium text-white truncate max-w-[120px]">
+                    <span className="text-[11px] font-medium text-[#F2EFE9] truncate max-w-[120px]">
                       {att.fileName}
                     </span>
-                    <span className="text-[9px] font-mono text-zinc-400 uppercase">
+                    <span className="text-[9px] font-mono text-[#9E9AA8] uppercase">
                       {att.type}
                     </span>
                   </div>
@@ -208,7 +208,7 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
                   <button
                     type="button"
                     onClick={() => handleRemoveAttachment(idx)}
-                    className="p-1 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-zinc-400 hover:text-white transition-colors cursor-pointer flex-shrink-0"
+                    className="p-1 rounded-full bg-[#0E0D12] hover:bg-[#2A2838] text-[#9E9AA8] hover:text-[#F2EFE9] transition-colors cursor-pointer flex-shrink-0"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -219,14 +219,14 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
 
           {/* Transcribing or Processing Indicator */}
           {isTranscribing && (
-            <div className="flex items-center gap-2 mx-4 my-2 text-xs text-indigo-300 font-mono animate-pulse">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+            <div className="flex items-center gap-2 mx-4 my-2 text-xs text-[#00D2D3] font-mono animate-pulse">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#00D2D3]" />
               {t.transcribing || 'Распознавание речи...'}
             </div>
           )}
 
           {isProcessingFile && (
-            <div className="flex items-center gap-2 mx-4 my-2 text-xs text-zinc-400 font-mono">
+            <div className="flex items-center gap-2 mx-4 my-2 text-xs text-[#9E9AA8] font-mono">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               Обработка вложений...
             </div>
@@ -234,10 +234,10 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
 
           {/* Active Voice Recording UI */}
           {isRecording ? (
-            <div className="flex items-center justify-between px-4 py-2 bg-rose-950/20 border border-rose-500/30 rounded-full mx-1 my-1">
+            <div className="flex items-center justify-between px-4 py-2 bg-[#FF3B30]/10 border border-[#FF3B30]/30 rounded-full mx-1 my-1">
               <div className="flex items-center gap-2.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-                <span className="text-xs font-mono font-semibold text-rose-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#FF3B30] animate-ping"></span>
+                <span className="text-xs font-mono font-semibold text-[#FF3B30]">
                   {t.recording || 'Запись:'} {formatTime(recordingDuration)}
                 </span>
               </div>
@@ -245,9 +245,9 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
               <button
                 type="button"
                 onClick={stopRecording}
-                className="px-3.5 py-1 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-md"
+                className="px-3.5 py-1 rounded-full bg-[#FF3B30] hover:bg-[#E03126] text-[#F2EFE9] text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm"
               >
-                <Square className="w-3 h-3 fill-white" />
+                <Square className="w-3 h-3 fill-[#F2EFE9]" />
                 <span>Стоп</span>
               </button>
             </div>
@@ -259,7 +259,7 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
                 type="button"
                 onClick={handleFileClick}
                 disabled={disabled || isProcessingFile || isTranscribing || attachments.length >= 4}
-                className="flex-shrink-0 w-9 h-9 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white disabled:opacity-40 transition-all flex items-center justify-center cursor-pointer border border-white/[0.08]"
+                className="flex-shrink-0 w-9 h-9 rounded-full bg-[#0E0D12] hover:bg-[#1E1C27] text-[#9E9AA8] hover:text-[#F2EFE9] disabled:opacity-40 transition-all flex items-center justify-center cursor-pointer border border-[#2A2838]"
                 title="Прикрепить фото, PDF, txt или видео"
               >
                 <Paperclip className="w-4 h-4" />
@@ -270,7 +270,7 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
                 type="button"
                 onClick={startRecording}
                 disabled={disabled || isProcessingFile || isTranscribing}
-                className="flex-shrink-0 w-9 h-9 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white disabled:opacity-40 transition-all flex items-center justify-center cursor-pointer border border-white/[0.08]"
+                className="flex-shrink-0 w-9 h-9 rounded-full bg-[#0E0D12] hover:bg-[#1E1C27] text-[#9E9AA8] hover:text-[#FF3B30] disabled:opacity-40 transition-all flex items-center justify-center cursor-pointer border border-[#2A2838]"
                 title={t.voiceRecord || "Голосовой ввод"}
               >
                 <Mic className="w-4 h-4" />
@@ -283,7 +283,7 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
                 onKeyDown={handleKeyDown}
                 disabled={disabled || isTranscribing}
                 placeholder={attachments.length > 0 ? 'Добавьте комментарий...' : (t.inputPlaceholder || t.sendMessage || 'Спросите о чем угодно...')}
-                className="w-full bg-transparent text-white placeholder-zinc-500 outline-none resize-none min-h-[36px] max-h-32 py-2 px-2 text-sm scrollbar-thin font-normal"
+                className="w-full bg-transparent text-[#F2EFE9] placeholder-[#9E9AA8] outline-none resize-none min-h-[36px] max-h-32 py-2 px-2 text-sm scrollbar-thin font-normal"
                 rows="1"
                 autoFocus
               />
@@ -292,7 +292,7 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="flex-shrink-0 w-9 h-9 rounded-full bg-white text-black flex items-center justify-center hover:bg-zinc-200 disabled:opacity-30 disabled:bg-white/[0.1] disabled:text-zinc-600 transition-all active:scale-95 cursor-pointer shadow-md"
+                className="flex-shrink-0 w-9 h-9 rounded-full bg-[#F2EFE9] text-[#0E0D12] flex items-center justify-center hover:bg-white disabled:opacity-30 disabled:bg-[#2A2838] disabled:text-[#9E9AA8] transition-all active:scale-95 cursor-pointer shadow-sm"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -302,11 +302,11 @@ export default function ChatInput({ lang, onSend, disabled, hasApiKey, onError }
       </form>
 
       <div className="flex flex-col items-center gap-1 mt-2">
-        <div className="flex items-center gap-1.5 px-3 py-0.5 bg-white/[0.04] backdrop-blur-md rounded-full border border-white/[0.08] text-[10px] text-zinc-400 font-mono">
-          <Sparkles className="w-3 h-3 text-indigo-400" />
+        <div className="flex items-center gap-1.5 px-3 py-0.5 bg-[#16151D] rounded-full border border-[#2A2838] text-[10px] text-[#9E9AA8] font-mono">
+          <Gavel className="w-3 h-3 text-[#FF3B30]" />
           <span>fun.ai Engine</span>
         </div>
-        <p className="text-[10px] text-zinc-500 text-center font-normal">
+        <p className="text-[10px] text-[#9E9AA8] text-center font-normal">
           {t.aiDisclaimerNote || "ИИ может ошибаться. Развлекательный контент 18+"}
         </p>
       </div>

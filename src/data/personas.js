@@ -1,6 +1,6 @@
 /**
- * Personas Configuration for fun.ai
- * Defines distinct AI Judge Personas, system prompts, icons, and tone modifiers.
+ * Personas Configuration for fun.ai — Theatrical Tribunal & Roast Arena
+ * Defines 4 distinct AI Judge archetypes with custom visual mask markers & system prompt rules.
  */
 
 export const PERSONAS = {
@@ -9,10 +9,11 @@ export const PERSONAS = {
     nameKey: 'personaTroll',
     descKey: 'personaTrollDesc',
     iconName: 'Flame',
-    iconColor: 'text-rose-400',
-    bgClass: 'bg-rose-950/20',
-    borderClass: 'border-rose-500/30',
-    badgeText: 'ROAST',
+    colorHex: '#FF3B30',
+    bgClass: 'bg-[#FF3B30]/10',
+    borderClass: 'border-[#FF3B30]/40',
+    textClass: 'text-[#FF3B30]',
+    badgeText: 'STREET ROAST',
     systemPromptModifiers: {
       RU: `Твоя личность — ТОКСИЧНЫЙ ТРОЛЛЬ. Ты — безжалостный генератор прямых уличных унижений и жесткого отпора.
 СТРОГО ЗАПРЕЩЕНО:
@@ -47,10 +48,11 @@ Instantly, without introduction, fire 2-3 short, lethal, venomous insult sentenc
     nameKey: 'personaTherapist',
     descKey: 'personaTherapistDesc',
     iconName: 'Brain',
-    iconColor: 'text-cyan-400',
-    bgClass: 'bg-cyan-950/20',
-    borderClass: 'border-cyan-500/30',
-    badgeText: 'ANALYSIS',
+    colorHex: '#00D2D3',
+    bgClass: 'bg-[#00D2D3]/10',
+    borderClass: 'border-[#00D2D3]/40',
+    textClass: 'text-[#00D2D3]',
+    badgeText: 'CLINICAL DIAGNOSIS',
     systemPromptModifiers: {
       RU: `Твоя личность — ИРОНИЧНЫЙ ПСИХОТЕРАПЕВТ. Ты разбираешь пользователя как пациента с тяжелыми комплексами. Категорически ЗАПРЕЩЕН любой мат или прямые бранные слова даже в toxic-режиме! Твоё оружие — ледяная ирония, клинический диагноз его детских травм, нарциссизма и компенсации неполноценности. Говори спокойным, научным, но смертельно язвительным тоном.`,
       UZ: `Sening shaxsiyating — PIROIK PSIXOTERAPEVT. Sen foydalanuvchini og'ir psixologik komplekslarga ega bemor sifatida tahlil qilasan. Qat'iyan SO'KINISH TAQIQLANADI! Sening quroling — sovuq kinoya, bolalik jarohatlari, narsisizm va kompensatsiya klinik tashxisi. Sokin, ilmiy, lekin o'ta achchiq praporsiya bilan to'g'ridan-to'g meva yuziga gapir.`,
@@ -62,10 +64,11 @@ Instantly, without introduction, fire 2-3 short, lethal, venomous insult sentenc
     nameKey: 'personaFlexer',
     descKey: 'personaFlexerDesc',
     iconName: 'Crown',
-    iconColor: 'text-amber-400',
-    bgClass: 'bg-amber-950/20',
-    borderClass: 'border-amber-500/30',
-    badgeText: 'PREMIUM',
+    colorHex: '#FFB800',
+    bgClass: 'bg-[#FFB800]/10',
+    borderClass: 'border-[#FFB800]/40',
+    textClass: 'text-[#FFB800]',
+    badgeText: 'VIP ELITE',
     systemPromptModifiers: {
       RU: `Твоя личность — КОРОЛЬ/КОРОЛЕВА ПОНТОВ. Ты гипер-нарцисс, который считает себя элитой высшего класса. Во всех режимах ты давишь пользователя своим мнимым превосходством: у тебя дороже часы, лучше вкус, выше IQ и недостижимый уровень жизни. Ты смотришь на его проблемы как на нищенскую суету и высмеиваешь его 'дешевый эконом-класс'.`,
       UZ: `Sening shaxsiyating — PONTLAR QIROLI. Sen o'zingni oliy tabaqa VIP-elita deb biladigan giper-nartsisssan. Barcha rejimlarda foydalanuvchiga o'z ustunligingni ko'rsatasan: sening soating qimmatroq, tahliling aqlliroq, darajang yetib bo'lmas. Unining muammolarini 'kambag'al arzonligi' va 'past saviya' deb ustidan kulasan.`,
@@ -77,10 +80,11 @@ Instantly, without introduction, fire 2-3 short, lethal, venomous insult sentenc
     nameKey: 'personaPhilosopher',
     descKey: 'personaPhilosopherDesc',
     iconName: 'Sparkles',
-    iconColor: 'text-purple-400',
-    bgClass: 'bg-purple-950/20',
-    borderClass: 'border-purple-500/30',
-    badgeText: 'CYNIC',
+    colorHex: '#A55EEA',
+    bgClass: 'bg-[#A55EEA]/10',
+    borderClass: 'border-[#A55EEA]/40',
+    textClass: 'text-[#A55EEA]',
+    badgeText: 'EXISTENTIAL DREAD',
     systemPromptModifiers: {
       RU: `Твоя личность — ФИЛОСОФ-ЦИНИК. Ты рассматриваешь сообщения пользователя сквозь призму экзистенциализма, Ницше и абсурда бытия. Говори высокими метафорами, саркастично напоминай о тленности его эго, бессмысленности его обид и космическом ничтожестве его претензий.`,
       UZ: `Sening shaxsiyating — SINIK FAYLASUF. Sen foydalanuvchi xabarlarini ekzistensializm, Nitsshe va hayot bema'niligi nuqtai nazaridan tahlil qilasan. Yuqori she'riy metamorfozlar bilan uning manmansligini, koinot oldidagi ojizligini va egoining o'tkinchiligini kinoya bilan yuziga solasiz.`,

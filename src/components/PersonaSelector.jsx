@@ -1,7 +1,7 @@
 import React from 'react';
 import { PERSONAS } from '../data/personas';
 import { TRANSLATIONS } from '../data/translations';
-import { Flame, Brain, Crown, Sparkles } from 'lucide-react';
+import { Flame, Brain, Crown, Sparkles, Gavel } from 'lucide-react';
 
 const ICON_MAP = {
   Flame,
@@ -17,8 +17,8 @@ export default function PersonaSelector({ activePersonaId, onSelectPersona, lang
   return (
     <div className="w-full max-w-4xl mx-auto my-2.5 px-2">
       <div className="flex items-center justify-between mb-2 px-2">
-        <span className="text-[11px] font-mono font-medium text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+        <span className="text-[11px] font-mono font-bold text-[#9E9AA8] uppercase tracking-widest flex items-center gap-1.5">
+          <Gavel className="w-3.5 h-3.5 text-[#FF3B30]" />
           {t.choosePersona || "Выбор характера ИИ"}
         </span>
       </div>
@@ -35,26 +35,42 @@ export default function PersonaSelector({ activePersonaId, onSelectPersona, lang
               key={p.id}
               type="button"
               onClick={() => onSelectPersona(p.id)}
-              className={`flex flex-col text-left p-4 rounded-[32px] border backdrop-blur-xl transition-all cursor-pointer relative overflow-hidden group ${
+              className={`flex flex-col text-left p-4 rounded-[28px] border transition-all cursor-pointer relative overflow-hidden group ${
                 isSelected
-                  ? `bg-[#12121f]/90 border-indigo-500/40 shadow-[0_0_20px_rgba(99,102,241,0.15)] ring-1 ring-indigo-500/30`
-                  : 'bg-[#0d0d14]/60 border-white/[0.07] hover:border-white/[0.15] hover:bg-[#13131f]/60'
+                  ? `bg-[#1E1C27] border-[${p.colorHex}] shadow-md ring-2 ring-[${p.colorHex}]/40`
+                  : 'bg-[#16151D] border-[#2A2838] hover:border-[#3D3A50] hover:bg-[#1A1823]'
               }`}
+              style={{
+                borderColor: isSelected ? p.colorHex : undefined
+              }}
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className={`w-8 h-8 rounded-full ${p.bgClass} border ${p.borderClass} flex items-center justify-center`}>
-                  <IconComponent className={`w-4 h-4 ${p.iconColor}`} />
+              <div className="flex items-center justify-between mb-2.5">
+                <div 
+                  className={`w-8 h-8 rounded-full flex items-center justify-center border`}
+                  style={{
+                    backgroundColor: `${p.colorHex}15`,
+                    borderColor: `${p.colorHex}40`
+                  }}
+                >
+                  <IconComponent className="w-4 h-4" style={{ color: p.colorHex }} />
                 </div>
-                <span className={`text-[9px] font-mono font-semibold px-2.5 py-0.5 rounded-full border ${isSelected ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : 'bg-white/[0.04] border-white/[0.08] text-zinc-500'}`}>
+                <span 
+                  className="text-[9px] font-mono font-bold px-2.5 py-0.5 rounded-full border uppercase"
+                  style={{
+                    backgroundColor: isSelected ? `${p.colorHex}25` : '#0E0D12',
+                    borderColor: isSelected ? `${p.colorHex}50` : '#2A2838',
+                    color: isSelected ? p.colorHex : '#9E9AA8'
+                  }}
+                >
                   {p.badgeText || p.id}
                 </span>
               </div>
 
-              <span className={`text-xs font-semibold mb-1 ${isSelected ? 'text-white font-bold' : 'text-zinc-300'}`}>
+              <span className={`text-xs font-stage font-bold mb-1 ${isSelected ? 'text-[#F2EFE9]' : 'text-[#D4D0C7]'}`}>
                 {name}
               </span>
 
-              <p className="text-[10px] text-zinc-400 leading-tight line-clamp-2">
+              <p className="text-[10px] text-[#9E9AA8] leading-relaxed line-clamp-2">
                 {desc}
               </p>
             </button>

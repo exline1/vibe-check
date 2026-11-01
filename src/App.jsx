@@ -269,7 +269,7 @@ export default function App() {
   };
 
   return (
-    <div className="bg-[#09090b] text-zinc-100 h-screen flex flex-col bg-radial-gradient relative overflow-hidden font-sans">
+    <div className="bg-stage-arena text-[#F2EFE9] h-screen flex flex-col relative overflow-hidden font-sans">
       <div className="max-w-[1050px] w-full mx-auto px-2 sm:px-6 flex flex-col h-full relative z-10">
         
         {/* Navigation Bar */}
